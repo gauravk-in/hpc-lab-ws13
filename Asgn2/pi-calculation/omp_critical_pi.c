@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 	{
 		//printf("Num Threads = %d\n", omp_get_num_threads());
 		x = (i * dx) + (dx / 2);
-		val = (1.0 / (1.0 + x * x)) * dx;
+		val = (1.0 / (1.0 + x * x));
 		#pragma omp critical
 		{
 			pi += val;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 
 	}
 
-	pi = pi * 4;
+	pi = pi * 4 * dx;
 
 	time_taken = get_ToD_diff_time(time);
 

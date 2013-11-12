@@ -30,10 +30,10 @@ int main(int argc, char **argv)
 	for(i = 0; i < steps; i++)
 	{
 		x = (i * dx) + (dx / 2);
-		pi += (1.0 / (1.0 + x * x)) * dx;
+		pi += (1.0 / (1.0 + x * x));
 	}
 
-	pi = pi * 4;
+	pi = pi * 4 * dx;
 
 	time_taken = get_ToD_diff_time(time);
 
