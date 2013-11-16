@@ -28,11 +28,12 @@ int main(int argc, char **argv)
         double * restrict b;
         double * restrict c;
 
-        int mem_size;
+        long mem_size;
 
         int bk, bj, i, j, k;
         int b_base, c_base;
         double r;
+	FILE *fp;
 
         /*char logfile_name[100];
         FILE *logfile_handle;*/
@@ -40,6 +41,9 @@ int main(int argc, char **argv)
         n = 1024;
         if(argc > 1){
                 n = atoi(argv[1]);
+        }
+        if(argc > 2){
+                fp = fopen(argv[2], "w");
         }
 
         //sprintf(logfile_name, "logfile_dgemm.txt");
@@ -82,6 +86,13 @@ int main(int argc, char **argv)
         flops = 2.0 * n * n * n / 1000000;
 
         print_flops(flops, time);
+
+        if(argc > 2)
+        {
+                for(i = 0; i < n; i++)
+                        for(j = 0; j < n; j++)
+                                fprintf(fp, "%f ", c[i * n + j]);
+        }
 
         return(0);
 }
