@@ -9,7 +9,7 @@
 #include <string.h>
 #include <immintrin.h>
 
-#define BLOCKSIZE 1024
+#define BLOCKSIZE 512 
 
 int max(int a, int b){
         if(a >= b) return a;
@@ -74,33 +74,32 @@ int main(int argc, char **argv)
                 for(bj = 0; bj < n; bj+=BLOCKSIZE) {
                         for(i = 0; i < n; i+=2){
                                 for(k = bk; k < min(n, bk+BLOCKSIZE); k+=2){
-                                                        __m256d a1_r = _mm256_set_pd(a[i * n + k], a[i * n + k], a[i * n + k], a[i * n + k]);
-                                                        __m256d a2_r = _mm256_set_pd(a[i * n + k + 1], a[i * n + k + 1], a[i * n + k + 1], a[i * n + k + 1]);
-                                                        __m256d a3_r = _mm256_set_pd(a[(i+1) * n + k], a[(i+1) * n + k], a[(i+1) * n + k], a[(i+1) * n + k]);
-                                                        __m256d a4_r = _mm256_set_pd(a[(i+1) * n + k+1], a[(i+1) * n + k+1], a[(i+1) * n + k+1], a[(i+1) * n + k+1]);
-                                                        #pragma ivdep
-                                                        {
-                                                        for(j = bj ; j < min(n, bj + BLOCKSIZE); j+=8){
-                                                                __m256d c1_r = _mm256_load_pd(&c[i * n + j]);
-                                                                __m256d c2_r = _mm256_load_pd(&c[i * n + j + 4]);
-                                                                __m256d c3_r = _mm256_load_pd(&c[(i+1) * n + j]);
-                                                                __m256d c4_r = _mm256_load_pd(&c[(i+1) * n + j + 4]);
-                                                                __m256d b1_r = _mm256_load_pd(&b[k * n + j]);
-                                                                __m256d b2_r = _mm256_load_pd(&b[k * n + j + 4]);
-                                                                __m256d b3_r = _mm256_load_pd(&b[(k+1) * n + j]);
-                                                                __m256d b4_r = _mm256_load_pd(&b[(k+1) * n + j + 4]);
-                                                                c1_r = _mm256_add_pd(c1_r, _mm256_add_pd(_mm256_mul_pd(a1_r, b1_r), _mm256_mul_pd(a2_r, b3_r)));
-                                                                c2_r = _mm256_add_pd(c2_r, _mm256_add_pd(_mm256_mul_pd(a1_r, b2_r), _mm256_mul_pd(a2_r, b4_r)));
-                                                                c3_r = _mm256_add_pd(c3_r, _mm256_add_pd(_mm256_mul_pd(a3_r, b1_r), _mm256_mul_pd(a4_r, b3_r)));
-                                                                c4_r = _mm256_add_pd(c4_r, _mm256_add_pd(_mm256_mul_pd(a3_r, b2_r), _mm256_mul_pd(a4_r, b4_r)));
-                                                                _mm256_store_pd(&c[i * n + j], c1_r);
-                                                                _mm256_store_pd(&c[i * n + j + 4], c2_r);
-                                                                _mm256_store_pd(&c[(i+1) * n + j], c3_r);
-                                                                _mm256_store_pd(&c[(i+1) * n + j + 4], c4_r);
-                                                                //c[i * n + j] += r * b[k * n + j];
-                                                        }
-                                                        }
-
+                                	__m256d a1_r = _mm256_set_pd(a[i * n + k], a[i * n + k], a[i * n + k], a[i * n + k]);
+                                        __m256d a2_r = _mm256_set_pd(a[i * n + k + 1], a[i * n + k + 1], a[i * n + k + 1], a[i * n + k + 1]);
+                                        __m256d a3_r = _mm256_set_pd(a[(i+1) * n + k], a[(i+1) * n + k], a[(i+1) * n + k], a[(i+1) * n + k]);
+                                        __m256d a4_r = _mm256_set_pd(a[(i+1) * n + k+1], a[(i+1) * n + k+1], a[(i+1) * n + k+1], a[(i+1) * n + k+1]);
+ 					#pragma ivdep 
+                                        {
+                                        	for(j = bj ; j < min(n, bj + BLOCKSIZE); j+=8){
+                                                	__m256d c1_r = _mm256_load_pd(&c[i * n + j]);
+                                                        __m256d c2_r = _mm256_load_pd(&c[i * n + j + 4]);
+                                                        __m256d c3_r = _mm256_load_pd(&c[(i+1) * n + j]);
+                                                        __m256d c4_r = _mm256_load_pd(&c[(i+1) * n + j + 4]);
+                                                        __m256d b1_r = _mm256_load_pd(&b[k * n + j]);
+                                                        __m256d b2_r = _mm256_load_pd(&b[k * n + j + 4]);
+                                                        __m256d b3_r = _mm256_load_pd(&b[(k+1) * n + j]);
+                                                        __m256d b4_r = _mm256_load_pd(&b[(k+1) * n + j + 4]);
+                                                        c1_r = _mm256_add_pd(c1_r, _mm256_add_pd(_mm256_mul_pd(a1_r, b1_r), _mm256_mul_pd(a2_r, b3_r)));
+                                                        c2_r = _mm256_add_pd(c2_r, _mm256_add_pd(_mm256_mul_pd(a1_r, b2_r), _mm256_mul_pd(a2_r, b4_r)));
+                                                        c3_r = _mm256_add_pd(c3_r, _mm256_add_pd(_mm256_mul_pd(a3_r, b1_r), _mm256_mul_pd(a4_r, b3_r)));
+                                                        c4_r = _mm256_add_pd(c4_r, _mm256_add_pd(_mm256_mul_pd(a3_r, b2_r), _mm256_mul_pd(a4_r, b4_r)));
+                                                        _mm256_store_pd(&c[i * n + j], c1_r);
+                                                        _mm256_store_pd(&c[i * n + j + 4], c2_r);
+                                                        _mm256_store_pd(&c[(i+1) * n + j], c3_r);
+                                                        _mm256_store_pd(&c[(i+1) * n + j + 4], c4_r);
+                                                        //c[i * n + j] += r * b[k * n + j];
+                               		        }
+                                        }
                                 }
                         }
                 }
