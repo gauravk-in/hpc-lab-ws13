@@ -73,8 +73,10 @@ int main(int argc, char **argv)
         for(bk = 0; bk < n; bk+=BLOCKSIZE) {
                 for(bj = 0; bj < n; bj+=BLOCKSIZE) {
                         for(i = 0; i < n; i++){
+				#pragma omp parallel for
                                 for(k = bk; k < min(n, bk+BLOCKSIZE); k++){
                                         r = a[i * n + k];
+//					#pragma omp parallel for
                                         for(j = bj ; j < min(n, bj + BLOCKSIZE); j++){
                                                 c[i * n + j] += r * b[k * n + j];
                                         }
