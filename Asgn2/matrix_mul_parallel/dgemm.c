@@ -83,6 +83,7 @@ int main(int argc, char **argv)
 	__m256d c3_r;
 	__m256d c4_r;
 
+
         for(bk = 0; bk < n; bk+=BLOCKSIZE) {
 		#pragma omp parallel for schedule(static) private(a1_r, a2_r, a3_r, a4_r, b1_r, b2_r, b3_r, b4_r, c1_r, c2_r, c3_r, c4_r, i, k, j, bj)
                 for(bj = 0; bj < n; bj+=BLOCKSIZE) {
@@ -93,8 +94,6 @@ int main(int argc, char **argv)
                                                         a2_r = _mm256_set_pd(a[i * n + k + 1], a[i * n + k + 1], a[i * n + k + 1], a[i * n + k + 1]);
                                                         a3_r = _mm256_set_pd(a[(i+1) * n + k], a[(i+1) * n + k], a[(i+1) * n + k], a[(i+1) * n + k]);
                                                         a4_r = _mm256_set_pd(a[(i+1) * n + k+1], a[(i+1) * n + k+1], a[(i+1) * n + k+1], a[(i+1) * n + k+1]);
-							#pragma ivdep
-                                                        {
 //							#pragma omp parallel for private(a1_r, a2_r, a3_r, a4_r)
 							for(j = bj ; j < min(n, bj + BLOCKSIZE); j+=8){
                                                                 c1_r = _mm256_load_pd(&c[i * n + j]);
@@ -114,7 +113,6 @@ int main(int argc, char **argv)
                                                                 _mm256_store_pd(&c[(i+1) * n + j], c3_r);
                                                                 _mm256_store_pd(&c[(i+1) * n + j + 4], c4_r);
                                                                 //c[i * n + j] += r * b[k * n + j];
-                                                        }
                                                         }
 
                                 }
