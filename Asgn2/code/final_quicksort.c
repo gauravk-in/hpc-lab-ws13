@@ -89,8 +89,12 @@ int main(int argc, char **argv)
 	time_marker_t time = get_time();
 	
 	//print_list(data, length);
-
-	quicksort(data, length);	
+	
+	#pragma omp parallel
+	{
+		#pragma omp single
+		quicksort(data, length);	
+	}
 
 	/*print_list(data, length);
 	if(check(data, length) != 0)
