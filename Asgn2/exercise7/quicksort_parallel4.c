@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
 
 void print_list(double *data, int length){
 	int i;
@@ -48,10 +49,23 @@ void quicksort(double *data, int length){
 	/* recursion */
 	//#pragma omp parallel section
 	
-		#pragma omp task untied final(right < 10000)
+	#pragma omp parallel
+	{
+	
+		//#pragma omp task untied final(right < 10)
+		#pragma omp task untied final (right < 10)
+		//printf("Number of threads is (right = %d): %d\n", right, omp_get_num_threads());
 		quicksort(data, right);
-		#pragma omp task untied final(length-left < 10000)
-		quicksort(&(data[left]), length - left);
+		
+		
+		//#pragma omp task untied final(length-left < 10)
+		#pragma omp task untied final(length-left < 10)
+		//quicksort(&(data[left]), length - left);
+		//printf("Number of threads is (left = %d): %d\n", length-left, omp_get_num_threads());
+		
+		
+	}
+	#pragma omp taskwait
 	
 }
 
@@ -95,8 +109,8 @@ int main(int argc, char **argv)
 	quicksort(data, length);	
 
 	//print_list(data, length);
-	/*if(check(data, length) != 0)
-		printf("ERROR\n");*/
+	if(check(data, length) != 0)
+		printf("ERROR\n");
 
 	printf("Size of dataset: %d, elapsed time[s] %e \n", length, get_ToD_diff_time(time));
 
