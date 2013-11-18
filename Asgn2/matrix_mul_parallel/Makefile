@@ -1,7 +1,7 @@
 #!/bin/sh
 
 CC=icc
-CFLAGS=-std=c99 -restrict -O3 -ip -ip_no_inlining -vec_report3 -opt_report_filedgemm.opt -opt_report_phaseall -openmp -xAVX
+CFLAGS=-std=c99 -O3 -openmp -xAVX
 
 all: dgemm
 

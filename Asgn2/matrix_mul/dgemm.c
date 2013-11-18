@@ -77,12 +77,12 @@ int main(int argc, char **argv)
         double flops;
 	
         for(bk = 0; bk < n; bk+=BLOCKSIZE) {
+		#pragma omp parallel for schedule(static) private(bj, i, k, j, r)
                 for(bj = 0; bj < n; bj+=BLOCKSIZE) {
                         for(i = 0; i < n; i++){
-				#pragma omp parallel for schedule(static)
+//				#pragma omp parallel for schedule(static)
                                 for(k = bk; k < bk+BLOCKSIZE; k++){
                                         r = a[i * n + k];
-//					#pragma omp parallel for schedule(static) private(r)
 					#pragma simd 
                                         for(j = bj ; j < bj + BLOCKSIZE; j++){
                                                 c[i * n + j] += r * b[k * n + j];

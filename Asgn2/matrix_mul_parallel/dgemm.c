@@ -8,8 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <immintrin.h>
+#include <omp.h>
 
-#define BLOCKSIZE 1024 
+//#define BLOCKSIZE 128 
 
 int max(int a, int b){
         if(a >= b) return a;
@@ -24,9 +25,11 @@ inline int min(int a, int b){
 int main(int argc, char **argv)
 {
         int n;
-        double * restrict a;
-        double * restrict b;
-        double * restrict c;
+	int BLOCKSIZE;
+	int num_threads;
+	double * a;
+        double * b;
+        double * c;
 
         long mem_size;
 
@@ -38,6 +41,8 @@ int main(int argc, char **argv)
         /*char logfile_name[100];
         FILE *logfile_handle;*/
 
+	num_threads = omp_get_max_threads();
+
         n = 1024;
         if(argc > 1){
                 n = atoi(argv[1]);
@@ -46,7 +51,13 @@ int main(int argc, char **argv)
                 fp = fopen(argv[2], "w");
         }
 
-        //sprintf(logfile_name, "logfile_dgemm.txt");
+	if(num_threads > 1)
+		BLOCKSIZE = min(256, n/num_threads);
+	else
+		BLOCKSIZE = min(1024, n);
+
+	printf("Block Size = %d\n", BLOCKSIZE);        
+	//sprintf(logfile_name, "logfile_dgemm.txt");
         //logfile_handle = freopen(logfile_name, "w", stdout);
 
         mem_size = n * n * sizeof(double);
@@ -94,7 +105,6 @@ int main(int argc, char **argv)
                                                         a2_r = _mm256_set_pd(a[i * n + k + 1], a[i * n + k + 1], a[i * n + k + 1], a[i * n + k + 1]);
                                                         a3_r = _mm256_set_pd(a[(i+1) * n + k], a[(i+1) * n + k], a[(i+1) * n + k], a[(i+1) * n + k]);
                                                         a4_r = _mm256_set_pd(a[(i+1) * n + k+1], a[(i+1) * n + k+1], a[(i+1) * n + k+1], a[(i+1) * n + k+1]);
-//							#pragma omp parallel for private(a1_r, a2_r, a3_r, a4_r)
 							for(j = bj ; j < min(n, bj + BLOCKSIZE); j+=8){
                                                                 c1_r = _mm256_load_pd(&c[i * n + j]);
                                                                 c2_r = _mm256_load_pd(&c[i * n + j + 4]);
