@@ -51,7 +51,7 @@ void quicksort(double *data, int length){
 	//print_list(data, length);
 
 	/* recursion */
-	if(right >= 156250)
+	if(right >= threshold)
 	{
 		#pragma omp task untied firstprivate(right)
 		quicksort(data, right);
@@ -59,7 +59,7 @@ void quicksort(double *data, int length){
 	else
 		quicksort(data, right);
 
-	if(length-left >= 156250)
+	if(length-left >= threshold)
 	{
 		#pragma omp task untied firstprivate(left, length)
 		quicksort(&(data[left]), length - left);
