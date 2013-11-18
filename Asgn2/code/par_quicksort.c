@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
+
+#define FACTOR 16
+
+long threshold;
 
 void print_list(double *data, int length){
 	int i;
@@ -46,7 +51,7 @@ void quicksort(double *data, int length){
 	//print_list(data, length);
 
 	/* recursion */
-	if(right < 156250)
+	if(right >= 156250)
 	{
 		#pragma omp task untied firstprivate(right)
 		quicksort(data, right);
@@ -54,9 +59,9 @@ void quicksort(double *data, int length){
 	else
 		quicksort(data, right);
 
-	if(length-left < 156250)
+	if(length-left >= 156250)
 	{
-		#pragma omp task untied firstprivate(left, length) final(length-left<156250)
+		#pragma omp task untied firstprivate(left, length)
 		quicksort(&(data[left]), length - left);
 	}
 	else
@@ -80,10 +85,17 @@ int main(int argc, char **argv)
 
 	int i, j, k;
 
+	int num_threads;
+
 	length = 10000000;
 	if(argc > 1){
 		length = atoi(argv[1]);
 	}
+
+	num_threads = omp_get_max_threads();
+	printf("num threads=%d\n", num_threads);
+	threshold = length / (num_threads*FACTOR);
+	printf("Threshold=%ld\n", threshold);
 
 	data = (double*)malloc(length * sizeof(double));
 	if(0 == data){
