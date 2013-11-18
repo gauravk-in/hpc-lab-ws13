@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
+
+#define factor 2
 
 void print_list(double *data, int length){
 	int i;
@@ -24,6 +27,9 @@ void quicksort(double *data, int length){
 	double temp;
 	int left = 1;
 	int right = length - 1;
+
+        int limit;
+	int max_threads = omp_get_max_threads();
 
 	do {
 		while(left < (length - 1) && data[left] <= pivot) left++;
@@ -45,10 +51,14 @@ void quicksort(double *data, int length){
 
 	//print_list(data, length);
 
+	//printf("max num threads: %d, %d\n", max_threads, omp_get_max_threads());
+
+        limit = length/(max_threads*factor);
+
 	/* recursion */
-	#pragma omp task untied firstprivate(right) final(right<156250)
+	#pragma omp task untied firstprivate(right) final(right<limit)
 	quicksort(data, right);
-	#pragma omp task untied firstprivate(left, length) final(length-left<156250)
+	#pragma omp task untied firstprivate(left, length) final(length-left<limit)
 	quicksort(&(data[left]), length - left);
 	#pragma omp taskwait
 }
@@ -96,9 +106,9 @@ int main(int argc, char **argv)
 		quicksort(data, length);	
 	}
 
-	/*print_list(data, length);
+	/*print_list(data, length);*/
 	if(check(data, length) != 0)
-		printf("ERROR\n");*/
+		printf("ERROR\n");
 
 	printf("Size of dataset: %d, elapsed time[s] %e \n", length, get_ToD_diff_time(time));
 
