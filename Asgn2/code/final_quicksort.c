@@ -9,7 +9,7 @@
 #include <string.h>
 #include <omp.h>
 
-#define FACTOR 4
+#define FACTOR 16 
 
 long threshold;
 
@@ -80,7 +80,9 @@ int main(int argc, char **argv)
 	}
 
 	num_threads = omp_get_max_threads();
+	printf("num threads=%d\n", num_threads);
 	threshold = length / (num_threads*FACTOR);
+	printf("Threshold=%ld\n", threshold);
 
 	data = (double*)malloc(length * sizeof(double));
 	if(0 == data){
@@ -108,7 +110,7 @@ int main(int argc, char **argv)
 	if(check(data, length) != 0)
 		printf("ERROR\n");
 
-	printf("Size of dataset: %d, elapsed time[s] %e \n", length, get_ToD_diff_time(time));
+	printf("Size of dataset: %ld, elapsed time[s] %e \n", length, get_ToD_diff_time(time));
 
 	return(0);
 }
