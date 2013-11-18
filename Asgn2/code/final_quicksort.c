@@ -9,7 +9,9 @@
 #include <string.h>
 #include <omp.h>
 
-#define factor 2
+#define FACTOR 4
+
+long threshold;
 
 void print_list(double *data, int length){
 	int i;
@@ -27,9 +29,6 @@ void quicksort(double *data, int length){
 	double temp;
 	int left = 1;
 	int right = length - 1;
-
-        int limit;
-	int max_threads = omp_get_max_threads();
 
 	do {
 		while(left < (length - 1) && data[left] <= pivot) left++;
@@ -50,15 +49,12 @@ void quicksort(double *data, int length){
 	}
 
 	//print_list(data, length);
-
 	//printf("max num threads: %d, %d\n", max_threads, omp_get_max_threads());
 
-        limit = length/(max_threads*factor);
-
 	/* recursion */
-	#pragma omp task untied firstprivate(right) final(right<limit)
+	#pragma omp task untied firstprivate(right) final(right<threshold)
 	quicksort(data, right);
-	#pragma omp task untied firstprivate(left, length) final(length-left<limit)
+	#pragma omp task untied firstprivate(left, length) final(length-left<threshold)
 	quicksort(&(data[left]), length - left);
 	#pragma omp taskwait
 }
@@ -72,17 +68,19 @@ int check(double *data, int length){
 
 int main(int argc, char **argv)
 {
-	int length;
+	long length;
 	double *data;
-
 	int mem_size;
-
 	int i, j, k;
+	int num_threads;
 
 	length = 10000000;
 	if(argc > 1){
 		length = atoi(argv[1]);
 	}
+
+	num_threads = omp_get_max_threads();
+	threshold = length / (num_threads*FACTOR);
 
 	data = (double*)malloc(length * sizeof(double));
 	if(0 == data){
