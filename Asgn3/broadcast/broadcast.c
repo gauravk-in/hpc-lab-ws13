@@ -34,6 +34,8 @@ int main(int argc, char **argv)
 
 	MPI_Bcast (array, N, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD);
 	
+	MPI_Barrier(MPI_COMM_WORLD);
+
 	if(rank == 0)
 	{
 		time_taken = get_ToD_diff_time (time);

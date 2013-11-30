@@ -34,13 +34,19 @@ int main(int argc, char **argv)
 		{
 			MPI_Send(array, N, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD);
 		}
-		time_taken = get_ToD_diff_time (time);
-		printf("Thread(0) : Time taken = %e\n", time_taken);
 	}
 	else
 	{
 		MPI_Recv(array, N, MPI_DOUBLE_PRECISION, 0, 1, MPI_COMM_WORLD, &status);
 		// printf("Received by Thread = %d\n", rank);
+	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	
+	if(rank == 0)
+	{
+		time_taken = get_ToD_diff_time (time);
+		printf("Thread(0) : Time taken = %e\n", time_taken);
 	}
 	
 	MPI_Finalize();

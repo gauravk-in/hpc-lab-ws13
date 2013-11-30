@@ -50,6 +50,9 @@ int main(int argc, char **argv)
 			//printf("Recvd\n");
 		}
 	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
 	if(rank == 0)
 	{
 		time_taken = get_ToD_diff_time (time);
