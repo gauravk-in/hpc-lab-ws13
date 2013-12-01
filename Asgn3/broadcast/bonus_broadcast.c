@@ -10,8 +10,8 @@ int main(int argc, char **argv)
 {
 	int rank, size;
 	double *array, *recv;
-	int i;
-	long length, bytes_sent;
+	int i, j;
+	long bytes_sent, length;
 	MPI_Status status;
 	time_marker_t time;
 	double time_taken;
@@ -51,12 +51,42 @@ int main(int argc, char **argv)
 	//broadcast operation
 	if(rank == 0)
 	{
-		MPI_Scatter(array, length/size, MPI_DOUBLE_PRECISION, recv, length/size, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD);
+		//MPI_Scatter(array, length/size, MPI_DOUBLE_PRECISION, recv, length/size, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD);
+		for(i = 1; i < size; i++){
+			MPI_Send((array+(length/size)*i), length/size, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD);
+		}
+	}
+	else
+	{
+		MPI_Recv(recv, length/size, MPI_DOUBLE_PRECISION, 0, 1, MPI_COMM_WORLD, &status);
+		*(array + rank * (length/size)) = *(recv);
 	}
 	
-	MPI_Barrier(MPI_COMM_WORLD);
+	for(i = 0; i < size; i++){
+		if(i == 0)
+		{
+			for(j = 1; j < size; j++) 
+				MPI_Send(array, length/size, MPI_DOUBLE_PRECISION, 0, 1, MPI_COMM_WORLD);
+		}
+		else if(rank == i && rank > 0)
+		{
+			for(j = 1; j < size; j++)
+			{
+				if(j != i)
+					MPI_Send(recv, length/size, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD);
+			}
+		}
+		else
+		{
+			MPI_Recv((array + (length/size)*i), length/size, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD, &status);
+			*(array + i * (length/size)) = *(recv);
+		}
 	
-	MPI_Allgather(recv, length/size, MPI_DOUBLE_PRECISION, array, length/size, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD);
+	}
+	
+	//MPI_Barrier(MPI_COMM_WORLD);
+	
+	//MPI_Allgather(recv, length/size, MPI_DOUBLE_PRECISION, array, length/size, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD);
 	
 	
 	MPI_Barrier(MPI_COMM_WORLD);

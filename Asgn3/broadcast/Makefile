@@ -20,5 +20,8 @@ tree_broadcast: tree_broadcast.c timer.o
 scatter_broadcast: scatter_broadcast.c timer.o
 	$(CC) $(CCFLAGS) -o $@ $^
 
+bonus_broadcast: bonus_broadcast.c timer.o
+	$(CC) $(CCFLAGS) -o $@ $^
+
 clean:
-	rm -rf trivial_broadcast tree_broadcast broadcast *.o
+	rm -rf trivial_broadcast tree_broadcast broadcast scatter_broadcast bonus_broadcast *.o

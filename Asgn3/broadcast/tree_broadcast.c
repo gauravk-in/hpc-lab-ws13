@@ -4,7 +4,7 @@
 #include "timer.h"
 #include <math.h>
 
-#define N 1000
+#define N 10000
 
 int main(int argc, char **argv)
 {
@@ -14,6 +14,7 @@ int main(int argc, char **argv)
 	MPI_Status status;
 	time_marker_t time;
 	double time_taken;
+	long bytes_sent;
 	int receiver;
 
 	MPI_Init (&argc, &argv);
@@ -26,6 +27,7 @@ int main(int argc, char **argv)
 
 	if(rank == 0)
 	{
+		printf("Size = %d\n", size);
 		for (i=0; i<N; i++)
 		{
 			array[i] = i;
@@ -57,6 +59,9 @@ int main(int argc, char **argv)
 	{
 		time_taken = get_ToD_diff_time (time);
 		printf("Thread(0) : Time taken = %e\n", time_taken);
+		bytes_sent = sizeof(double) * N * (size - 1);
+		printf("Thread(0) : Bytes sent = %ld\n", bytes_sent);
+		printf("Thread(0) : Bandwidth = %e\n", bytes_sent/time_taken);
 	}
 	
 	MPI_Finalize();
