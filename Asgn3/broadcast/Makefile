@@ -3,7 +3,7 @@
 CC=mpicc
 CCFLAGS=-O3
 
-all: trivial_broadcast tree_broadcast broadcast
+all: trivial_broadcast tree_broadcast broadcast scatter_broadcast bonus_broadcast
 
 timer.o: timer.c
 	$(CC) $(CCFLAGS) -c $^

@@ -4,7 +4,7 @@
 #include "timer.h"
 #include <math.h>
 
-#define N 10000
+#define N 1000
 
 int main(int argc, char **argv)
 {
