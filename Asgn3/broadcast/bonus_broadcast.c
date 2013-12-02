@@ -4,7 +4,7 @@
 #include "timer.h"
 #include <math.h>
 
-#define N 10000
+#define N 100000
 
 int main(int argc, char **argv)
 {
@@ -49,44 +49,43 @@ int main(int argc, char **argv)
 	}
 	
 	//broadcast operation
-	if(rank == 0)
-	{
-		//MPI_Scatter(array, length/size, MPI_DOUBLE_PRECISION, recv, length/size, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD);
-		for(i = 1; i < size; i++){
-			MPI_Send((array+(length/size)*i), length/size, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD);
-		}
-	}
-	else
-	{
-		MPI_Recv(recv, length/size, MPI_DOUBLE_PRECISION, 0, 1, MPI_COMM_WORLD, &status);
-		*(array + rank * (length/size)) = *(recv);
-	}
 	
-	for(i = 0; i < size; i++){
-		if(i == 0)
+	for(i = 1; i < size; i++){
+		if(rank == 0)
 		{
-			for(j = 1; j < size; j++) 
-				MPI_Send(array, length/size, MPI_DOUBLE_PRECISION, 0, 1, MPI_COMM_WORLD);
+			MPI_Send((array+(length/size)*i), length/size, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD);
+			//printf("Send operation %d completed\n", i);
 		}
-		else if(rank == i && rank > 0)
+		else if(rank == i)
 		{
-			for(j = 1; j < size; j++)
+			MPI_Recv(recv, length/size, MPI_DOUBLE_PRECISION, 0, 1, MPI_COMM_WORLD, &status);
+			*(array + rank * (length/size)) = *(recv);
+			//printf("Receive operation %d of process %d completed\n", i, rank);
+		}
+	}
+	//printf("CheckPoint 1-%d reached\n", rank);
+	for(i = 0; i < size; i++){
+		for(j = 1; j < size; j++)
+		{
+			if(i == 0 && rank == 0)
 			{
-				if(j != i)
-					MPI_Send(recv, length/size, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD);
+			 	MPI_Send(array, length/size, MPI_DOUBLE_PRECISION, j, 1, MPI_COMM_WORLD);
+				//printf("Send operation %d of process %d to process %d completed\n", i, rank, j);
+			}
+			else if(rank == i && rank > 0 && i != j)
+			{
+				MPI_Send(recv, length/size, MPI_DOUBLE_PRECISION, j, 1, MPI_COMM_WORLD);
+				//printf("Send operation %d of process %d to process %d completed\n", i, rank, j);
+			}
+			else if(rank == j && rank != i)
+			{
+				MPI_Recv((array + (length/size)*i), length/size, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD, &status);
+				//printf("Receive operation %d of process %d completed\n", i, rank);
+				*(array + i * (length/size)) = *(recv);
 			}
 		}
-		else
-		{
-			MPI_Recv((array + (length/size)*i), length/size, MPI_DOUBLE_PRECISION, i, 1, MPI_COMM_WORLD, &status);
-			*(array + i * (length/size)) = *(recv);
-		}
-	
+		//MPI_Barrier(MPI_COMM_WORLD);
 	}
-	
-	//MPI_Barrier(MPI_COMM_WORLD);
-	
-	//MPI_Allgather(recv, length/size, MPI_DOUBLE_PRECISION, array, length/size, MPI_DOUBLE_PRECISION, MPI_COMM_WORLD);
 	
 	
 	MPI_Barrier(MPI_COMM_WORLD);
