@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/time.h>
 
 #define BLOCK_SIZE 32
 

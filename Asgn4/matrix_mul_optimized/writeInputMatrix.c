@@ -27,7 +27,8 @@ int main(int argc, char **argv)
 
 	if(argc != 4)
 	{
-		printf("Incorrect Command!\n");
+		printf("Incorrect Usage!\n");
+		printf("./writeInputMatrix <fileName> <value> <width>\n");
 		exit(1);
 	}
 

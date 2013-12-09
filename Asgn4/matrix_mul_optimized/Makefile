@@ -1,12 +1,12 @@
-CC=gcc
+CC=icc
 
 all: matrix_mul writeInputMatrix matrix_mul_benchmark
 
 matrix_mul: main.c
-	$(CC) $^ -o $@ -I../opencl10 -L/usr/lib/nvidia-304 -lOpenCL
+	$(CC) $^ -o $@ $(OPENCL_SHLIB)
 
 matrix_mul_benchmark: main_benchmark.c
-	$(CC) $^ -o $@ -I../opencl10 -L/usr/lib/nvidia-304 -lOpenCL	
+	$(CC) $^ -o $@ $(OPENCL_SHLIB)	
 
 writeInputMatrix: writeInputMatrix.c
 	$(CC) $^ -o $@
