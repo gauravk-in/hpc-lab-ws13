@@ -16,3 +16,11 @@
 *.exe
 *.out
 *.app
+
+# Log Files
+Asgn4/report/template_Scrartcl.log
+
+# Large Input Files
+Asgn4/matrix_mul_optimized/M_matrix.txt
+Asgn4/matrix_mul_optimized/N_matrix.txt
+Asgn4/matrix_mul_optimized/P_matrix.txt
