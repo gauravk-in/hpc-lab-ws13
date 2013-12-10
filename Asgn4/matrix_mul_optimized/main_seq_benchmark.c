@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 		for(y = 0; y < width; y++)
 		{
 			P_host[x + y * width] = 0;
-			#pragma omp parallel for
+			//#pragma omp parallel for
 			for(k = 0; k < width; k++)
 			{
 				P_host[x + y * width] += M_host[k + y * width] * N_host[x + k * width];
