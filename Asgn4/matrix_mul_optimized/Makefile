@@ -1,6 +1,9 @@
 CC=icc
 
-all: matrix_mul writeInputMatrix matrix_mul_benchmark matrix_mul_seq_benchmark
+all: ocl_features matrix_mul writeInputMatrix matrix_mul_benchmark matrix_mul_seq_benchmark
+
+ocl_features: ocl_features.c
+	$(CC) $^ -o $@ $(OPENCL_SHLIB)
 
 matrix_mul: main.c
 	$(CC) $^ -o $@ $(OPENCL_SHLIB)
@@ -18,4 +21,4 @@ run: matrix_mul
 	./matrix_mul M_matrix.txt N_matrix.txt P_matrix.txt 10
 
 clean:
-	rm -rf *.o matrix_mul writeInputMatrix matrix_mul_benchmark matrix_mul_seq_benchmark
+	rm -rf *.o matrix_mul writeInputMatrix matrix_mul_benchmark matrix_mul_seq_benchmark ocl_features
