@@ -138,10 +138,13 @@ void init_grid(double* grid)
 void init_b(double* b)
 {
 	// set all points to zero
+	/*
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
 	{
 		b[i] = 0.0;
 	}
+	*/
+	b[0: grid_points_1d*grid_points_1d] = 0;
 }
 
 /**
@@ -340,6 +343,8 @@ void solve(double* grid, double* b, std::size_t cg_max_iterations, double cg_eps
 	_mm_free(q);
 	_mm_free(r);
 	_mm_free(b_save);
+
+	
 }
 
 /**
