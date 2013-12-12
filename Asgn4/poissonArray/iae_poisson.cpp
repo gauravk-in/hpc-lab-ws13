@@ -108,15 +108,20 @@ double eval_init_func(double x, double y)
  *
  * @param grid the grid to be initialized
  */
+ // Test
 void init_grid(double* grid)
 {
 	// set all points to zero
+	/*
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
 	{
 		grid[i] = 0.0;
 	}
+	*/
+	grid[0:grid_points_1d*grid_points_1d] = 0.0;
 
 	double mesh_width = 1.0/((double)(grid_points_1d-1));
+	
 	
 	for (int i = 0; i < grid_points_1d; i++)
 	{
@@ -127,6 +132,16 @@ void init_grid(double* grid)
 		grid[i*grid_points_1d] = eval_init_func(((double)i)*mesh_width, 0.0);
 		grid[(i*grid_points_1d) + (grid_points_1d-1)] = eval_init_func(((double)i)*mesh_width, 1.0);
 	}
+	
+	/*
+	// x-boundaries
+	grid[0:grid_points_1d] = eval_init_func(0.0, ((double)i)*mesh_width);
+	grid[((grid_points_1d)*(grid_points_1d-1)):(grid_points_1d)] = eval_init_func(1.0, ((double)i)*mesh_width);
+	// y-boundaries
+	grid[0:grid_points_1d:grid_points_1d] = eval_init_func(((double)i)*mesh_width, 0.0);
+	grid[(grid_points_1d-1):(grid_points_1d):grid_points_1d] = eval_init_func(((double)i)*mesh_width, 1.0);
+	*/
+	
 }
 
 /**
@@ -135,6 +150,7 @@ void init_grid(double* grid)
  *
  * @param b the right hand side
  */
+ // test
 void init_b(double* b)
 {
 	// set all points to zero
@@ -144,7 +160,7 @@ void init_b(double* b)
 		b[i] = 0.0;
 	}
 	*/
-	b[0: grid_points_1d*grid_points_1d] = 0;
+	b[0:grid_points_1d*grid_points_1d] = 0.0;
 }
 
 /**
@@ -153,12 +169,16 @@ void init_b(double* b)
  * @param dest destination grid
  * @param src source grid
  */
+ // Test
 void g_copy(double* dest, double* src)
 {
+	/*
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
 	{
 		dest[i] = src[i];
 	}
+	*/
+	dest[0:grid_points_1d*grid_points_1d] = src[0:grid_points_1d*grid_points_1d];
 }
 
 /**
@@ -168,10 +188,12 @@ void g_copy(double* dest, double* src)
  * @param grid1 first grid
  * @param grid2 second grid
  */
+ // Test
 double g_dot_product(double* grid1, double* grid2)
 {
 	double tmp = 0.0;
 
+	
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -179,6 +201,9 @@ double g_dot_product(double* grid1, double* grid2)
 			tmp += (grid1[(i*grid_points_1d)+j] * grid2[(i*grid_points_1d)+j]);
 		}
 	}
+	
+
+	//tmp = grid1[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] * grid2[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)];
 	
 	return tmp;
 }
@@ -190,8 +215,10 @@ double g_dot_product(double* grid1, double* grid2)
  * @param grid grid to be scaled
  * @param scalar scalar which is used to scale to grid
  */
+ // Test
 void g_scale(double* grid, double scalar)
 {
+	/*
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -199,6 +226,9 @@ void g_scale(double* grid, double scalar)
 			grid[(i*grid_points_1d)+j] *= scalar;
 		}
 	}
+	*/
+	
+	grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] *= scalar;
 }
 
 /**
@@ -209,8 +239,10 @@ void g_scale(double* grid, double scalar)
  * @param src source grid
  * @param scalar scalar to scale to source grid
  */
+ // Test
 void g_scale_add(double* dest, double* src, double scalar)
 {
+	/*
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -218,6 +250,10 @@ void g_scale_add(double* dest, double* src, double scalar)
 			dest[(i*grid_points_1d)+j] += (scalar*src[(i*grid_points_1d)+j]);
 		}
 	}
+	*/
+	
+	dest[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] += (scalar*src[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)]);
+	
 }
 
 /**
@@ -227,10 +263,12 @@ void g_scale_add(double* dest, double* src, double scalar)
  * @param grid grid for which the stencil should be evaluated
  * @param result grid where the stencil's evaluation should be stored
  */
+ // Test
 void g_product_operator(double* grid, double* result)
 {
 	double mesh_width = 1.0/((double)(grid_points_1d-1));
 
+	/*
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -242,10 +280,18 @@ void g_product_operator(double* grid, double* result)
 							- grid[(i*grid_points_1d)+j+1]
 							- grid[(i*grid_points_1d)+j-1]
 							) * (mesh_width*mesh_width);
-			printf("| %f |", result[(i*grid_points_1d)+j]);
-		}	
-	printf("\n");
+		}
 	}
+	*/
+	
+	result[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] = (
+			(4.0*grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)])
+			- grid[((2*grid_points_1d)+1):(grid_points_1d-2)*(grid_points_1d-2)]
+			- grid[1:(grid_points_1d-2)*(grid_points_1d-2)]
+			- grid[(grid_points_1d+2):(grid_points_1d-2)*(grid_points_1d-2)]
+			- grid[(grid_points_1d):(grid_points_1d-2)*(grid_points_1d-2)]
+			) * (mesh_width*mesh_width);
+	
 }
 
 /**
@@ -343,8 +389,6 @@ void solve(double* grid, double* b, std::size_t cg_max_iterations, double cg_eps
 	_mm_free(q);
 	_mm_free(r);
 	_mm_free(b_save);
-
-	
 }
 
 /**
