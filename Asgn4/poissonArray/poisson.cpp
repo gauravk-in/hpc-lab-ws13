@@ -239,9 +239,9 @@ void g_product_operator(double* grid, double* result)
 							- grid[(i*grid_points_1d)+j+1]
 							- grid[(i*grid_points_1d)+j-1]
 							) * (mesh_width*mesh_width);
-			printf("| %f |", result[(i*grid_points_1d)+j]);
+			//printf("| %f |", result[(i*grid_points_1d)+j]);
 		}	
-	printf("\n");
+	//printf("\n");
 	}
 }
 

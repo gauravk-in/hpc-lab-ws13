@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <sys/time.h>
+#include <cilk/cilk.h>
 
 /// store number of grid points in one dimension
 std::size_t grid_points_1d = 0;
@@ -192,8 +193,9 @@ void g_copy(double* dest, double* src)
 double g_dot_product(double* grid1, double* grid2)
 {
 	double tmp = 0.0;
+	double* mult = (double*)_mm_malloc((grid_points_1d-2)*(grid_points_1d-2)*sizeof(double), 64);
 
-	
+	/*
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -201,9 +203,11 @@ double g_dot_product(double* grid1, double* grid2)
 			tmp += (grid1[(i*grid_points_1d)+j] * grid2[(i*grid_points_1d)+j]);
 		}
 	}
-	
+	*/
 
-	//tmp = grid1[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] * grid2[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)];
+	mult[0:((grid_points_1d-2)*(grid_points_1d-2))] = grid1[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] * grid2[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)];
+	
+	tmp = __sec_reduce_add(mult[0:((grid_points_1d-2)*(grid_points_1d-2))]);
 	
 	return tmp;
 }
@@ -291,6 +295,7 @@ void g_product_operator(double* grid, double* result)
 			- grid[(grid_points_1d+2):(grid_points_1d-2)*(grid_points_1d-2)]
 			- grid[(grid_points_1d):(grid_points_1d-2)*(grid_points_1d-2)]
 			) * (mesh_width*mesh_width);
+	
 	
 }
 
