@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#define BLOCK_SIZE 32
+#define BLOCK_SIZE 32 
 
 #if defined __APPLE__ || defined(MACOSX)
     #include <OpenCL/opencl.h>
@@ -302,10 +302,13 @@ int main(int argc, char **argv)
     err = clSetKernelArg(kernel, 4, sizeof(cl_mem), (void *) &P_buffer);
     err = clSetKernelArg(kernel, 5, sizeof(cl_int), (void *) &width);
     clFinish(command_queue);
-    globalWorkSize[0] = width / BLOCK_SIZE;
-    globalWorkSize[1] = width / BLOCK_SIZE;
+    globalWorkSize[0] = width;
+    globalWorkSize[1] = width;
     localWorkSize[0] = BLOCK_SIZE;
     localWorkSize[1] = BLOCK_SIZE;
+    
+    printf("Global Work Size = %d x %d\nLocal Work Size = %d x %d\n", globalWorkSize[0], globalWorkSize[1], localWorkSize[0], localWorkSize[1]);
+
     err = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
    	clFinish(command_queue);
 

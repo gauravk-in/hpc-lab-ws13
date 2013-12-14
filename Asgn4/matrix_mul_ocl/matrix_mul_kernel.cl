@@ -1,5 +1,4 @@
-#define BLOCK_SIZE 32
-#define GLOBAL_WORK_SIZE (Width/BLOCK_SIZE)
+#define BLOCK_SIZE 32 
 
 __kernel void matrixMultiplyParallel ( 	__global const float* M,
 										__local float* M_l,
@@ -23,7 +22,7 @@ __kernel void matrixMultiplyParallel ( 	__global const float* M,
 	for(cur_block = 0; cur_block < Width / BLOCK_SIZE; cur_block++)
 	{
 		M_l[tx + ty * BLOCK_SIZE] = M[(by * BLOCK_SIZE + ty) * Width + (cur_block * BLOCK_SIZE + tx)];
-		N_l[tx + ty * BLOCK_SIZE] = M[(cur_block * BLOCK_SIZE + ty) * Width + (bx * BLOCK_SIZE + tx)];
+		N_l[tx + ty * BLOCK_SIZE] = N[(cur_block * BLOCK_SIZE + ty) * Width + (bx * BLOCK_SIZE + tx)];
 
 		barrier(CLK_LOCAL_MEM_FENCE);
 
