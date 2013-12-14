@@ -20,18 +20,21 @@ __kernel void matrixMultiplyParallel ( 	__global const float* M,
 
 	float product = 0;
 
-	M_l[tx + ty * BLOCK_SIZE] = M[(by * GLOBAL_WORK_SIZE + ty) * Width + (bx * GLOBAL_WORK_SIZE + tx)];
-	N_l[tx + ty * BLOCK_SIZE] = M[(by * GLOBAL_WORK_SIZE + ty) * Width + (bx * GLOBAL_WORK_SIZE + tx)];
-
-	barrier(CLK_LOCAL_MEM_FENCE);
-
-	#pragma unroll
-	for(k = 0; k < BLOCK_SIZE; k++)
+	for(cur_block = 0; cur_block < Width / BLOCK_SIZE; cur_block++)
 	{
-		product += M_l[k + ty * BLOCK_SIZE] * N_l[tx + k * BLOCK_SIZE];
-	}
+		M_l[tx + ty * BLOCK_SIZE] = M[(by * BLOCK_SIZE + ty) * Width + (cur_block * BLOCK_SIZE + tx)];
+		N_l[tx + ty * BLOCK_SIZE] = M[(cur_block * BLOCK_SIZE + ty) * Width + (bx * BLOCK_SIZE + tx)];
 
-	barrier(CLK_LOCAL_MEM_FENCE);
+		barrier(CLK_LOCAL_MEM_FENCE);
+
+		#pragma unroll
+		for(k = 0; k < BLOCK_SIZE; k++)
+		{
+			product += M_l[k + ty * BLOCK_SIZE] * N_l[tx + k * BLOCK_SIZE];
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
 
 	P[(bx * BLOCK_SIZE + tx) + (by * BLOCK_SIZE + ty) * Width] = product;
 }
