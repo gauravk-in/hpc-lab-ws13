@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cilk/cilk.h>
+#include <math.h>
 
 
 void print_list(double *data, int length){
@@ -48,7 +49,8 @@ void quicksort(double *data, int length){
 	//print_list(data, length);
 
 	/* recursion */
-	cilk_spawn quicksort(data, right);
+	if(right > 2000) cilk_spawn quicksort(data, right);
+	else quicksort(data, right);
 	quicksort(&(data[left]), length - left);
 
 	cilk_sync;
@@ -61,20 +63,22 @@ int check(double *data, int length){
 	return 0;
 }
 
-int main(int argc, char **argv)
+
+int old_main(int length)
 {
-	int length;
+	//int length;
 	double *data;
 
 	int mem_size;
 
 	int i, j, k;
 
+	/*
 	length = 10000000;
 	if(argc > 1){
 		length = atoi(argv[1]);
 	}
-
+	*/
 	data = (double*)malloc(length * sizeof(double));
 	if(0 == data){
 		printf("memory allocation failed");
@@ -100,5 +104,56 @@ int main(int argc, char **argv)
 	printf("Size of dataset: %d, elapsed time[s] %e \n", length, get_ToD_diff_time(time));
 
 	return(0);
+}
+
+int main(int argc, char **argv)
+{
+        int length;
+        int nworkers;
+	int i, j, temp, temp2, temp3;
+	char nthreads[4];
+	
+
+        length = 10000000;
+
+        if(argc > 1){
+                length = atoi(argv[1]);
+	}
+
+	for(i = 1; i < 256; i *= 2)
+	{
+		__cilkrts_end_cilk();	
+	
+		sprintf(nthreads, "%d", i);
+
+		/*
+		temp3 = i;
+		temp2 = 48;	
+
+		for(j = 0; j<3; j++)
+		{
+			temp = temp3 % 10;
+			nthreads[2-j] = (char) (temp2+temp);
+			temp3 -= temp;
+			temp3 /= 10;
+			printf("j = %d\n", temp);
+		}
+
+		nthreads[3] = (char) 0;
+
+		printf("nthreads : ");
+		printf("%s\n", nthreads);
+		*/		
+
+		__cilkrts_set_param("nworkers", nthreads);
+
+		nworkers = __cilkrts_get_nworkers();
+
+		printf("Intel Cilk Plus # workers: %d\n", nworkers);
+
+        	old_main(length);	
+	}
+
+        return 0;
 }
 
