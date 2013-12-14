@@ -5,7 +5,7 @@
 ******************************************************************************/
 // @author Alexander Heinecke (Alexander.Heinecke@mytum.de)
 
-#include <x86intrin.h>
+#include <immintrin.h>
 #include <cstdlib>
 #include <string>
 #include <iostream>
@@ -38,6 +38,9 @@ cl_context context;
 cl_command_queue command_queue;
 cl_program program;
 cl_kernel g_product_kernel;
+
+size_t globalWorkSize[3];
+size_t localWorkSize[3];
 
 void selectDevice()
 {
@@ -126,7 +129,7 @@ char* readProgramToBuffer(const char *path, size_t *program_length)
 	*program_length = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 
-	buffer = malloc(*program_length * sizeof(char) + 1);
+	buffer = (char *)malloc(*program_length * sizeof(char) + 1);
 	*program_length = fread(buffer, 1, *program_length, fp);
 	fclose(fp);
 	buffer[*program_length] = '\0';
@@ -143,7 +146,7 @@ void printBuildLog()
 	size_t ret_val_size;
 	err = clGetProgramBuildInfo(program, devices[ch_dev], CL_PROGRAM_BUILD_LOG, 0, NULL, &ret_val_size);
 
-	build_log = malloc(ret_val_size+1);
+	build_log = (char *)malloc(ret_val_size+1);
 	err = clGetProgramBuildInfo(program, devices[ch_dev], CL_PROGRAM_BUILD_LOG, ret_val_size, build_log, NULL);
 	build_log[ret_val_size] = '\0';
 	printf("BUILD LOG: \n %s", build_log);
@@ -371,11 +374,11 @@ void g_product_operator(float* grid, float* result)
     result_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, grid_points_1d * grid_points_1d * sizeof(float), NULL, &err);
 
     // 3. Invoke Kernel
-    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *) &grid_buffer);
-    // err = clSetKernelArg(kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
-    err = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *) &result_buffer);
-    // err = clSetKernelArg(kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
-    err = clSetKernelArg(kernel, 5, sizeof(cl_int), (void *) &grid_points_1d);
+    err = clSetKernelArg(g_product_kernel, 0, sizeof(cl_mem), (void *) &grid_buffer);
+    // err = clSetKernelArg(g_product_kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
+    err = clSetKernelArg(g_product_kernel, 2, sizeof(cl_mem), (void *) &result_buffer);
+    // err = clSetKernelArg(g_product_kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
+    err = clSetKernelArg(g_product_kernel, 5, sizeof(cl_int), (void *) &grid_points_1d);
     clFinish(command_queue);
     globalWorkSize[0] = grid_points_1d;
     globalWorkSize[1] = grid_points_1d;
@@ -401,7 +404,7 @@ void g_product_operator(float* grid, float* result)
  * @param cg_max_iterations max. number of CG iterations 
  * @param cg_eps the CG's epsilon
  */
-std::size_t solve(float* grid, float* b, std::size_t cg_max_iterations, float cg_eps)
+void solve(float* grid, float* b, std::size_t cg_max_iterations, float cg_eps)
 {
 	std::cout << "Starting Conjugated Gradients" << std::endl;
 
