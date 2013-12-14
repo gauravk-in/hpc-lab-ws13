@@ -12,6 +12,8 @@
 #include <fstream>
 #include <sys/time.h>
 
+#define BLOCK_SIZE 32
+
 #if defined __APPLE__ || defined(MACOSX)
     #include <OpenCL/opencl.h>
 #else
@@ -35,7 +37,7 @@ int ch_dev;
 cl_context context;
 cl_command_queue command_queue;
 cl_program program;
-cl_kernel kernel;
+cl_kernel g_product_kernel;
 
 void selectDevice()
 {
@@ -168,28 +170,28 @@ void timer_start()
  *
  * @return measured time
  */
-double timer_stop()
+float timer_stop()
 {
 	gettimeofday(&end,(struct timezone *)0);
-	double seconds, useconds;
-	double ret, tmp;
+	float seconds, useconds;
+	float ret, tmp;
 
 	if (end.tv_usec >= begin.tv_usec)
 	{
-		seconds = (double)end.tv_sec - (double)begin.tv_sec;
-		useconds = (double)end.tv_usec - (double)begin.tv_usec;
+		seconds = (float)end.tv_sec - (float)begin.tv_sec;
+		useconds = (float)end.tv_usec - (float)begin.tv_usec;
 	}
 	else
 	{
-		seconds = (double)end.tv_sec - (double)begin.tv_sec;
+		seconds = (float)end.tv_sec - (float)begin.tv_sec;
 		seconds -= 1;					// Correction
-		useconds = (double)end.tv_usec - (double)begin.tv_usec;
+		useconds = (float)end.tv_usec - (float)begin.tv_usec;
 		useconds += 1000000;			// Correction
 	}
 
 	// get time in seconds
-	tmp = (double)useconds;
-	ret = (double)seconds;
+	tmp = (float)useconds;
+	ret = (float)seconds;
 	tmp /= 1000000;
 	ret += tmp;
 
@@ -202,13 +204,13 @@ double timer_stop()
  * @param grid the grid that should be stored
  * @param filename the filename
  */
-void store_grid(double* grid, std::string filename)
+void store_grid(float* grid, std::string filename)
 {
 	std::fstream filestr;
 	filestr.open (filename.c_str(), std::fstream::out);
 	
 	// calculate mesh width 
-	double mesh_width = 1.0/((double)(grid_points_1d-1));
+	float mesh_width = 1.0/((float)(grid_points_1d-1));
 
 	// store grid incl. boundary points
 	for (int i = 0; i < grid_points_1d; i++)
@@ -232,7 +234,7 @@ void store_grid(double* grid, std::string filename)
  *
  * @return the initial value at position (x,y)
  */
-double eval_init_func(double x, double y)
+float eval_init_func(float x, float y)
 {
 	return (x*x)*(y*y);
 }
@@ -243,7 +245,7 @@ double eval_init_func(double x, double y)
  *
  * @param grid the grid to be initialized
  */
-void init_grid(double* grid)
+void init_grid(float* grid)
 {
 	// set all points to zero
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
@@ -251,16 +253,16 @@ void init_grid(double* grid)
 		grid[i] = 0.0;
 	}
 
-	double mesh_width = 1.0/((double)(grid_points_1d-1));
+	float mesh_width = 1.0/((float)(grid_points_1d-1));
 	
 	for (int i = 0; i < grid_points_1d; i++)
 	{
 		// x-boundaries
-		grid[i] = eval_init_func(0.0, ((double)i)*mesh_width);
-		grid[i + ((grid_points_1d)*(grid_points_1d-1))] = eval_init_func(1.0, ((double)i)*mesh_width);
+		grid[i] = eval_init_func(0.0, ((float)i)*mesh_width);
+		grid[i + ((grid_points_1d)*(grid_points_1d-1))] = eval_init_func(1.0, ((float)i)*mesh_width);
 		// y-boundaries
-		grid[i*grid_points_1d] = eval_init_func(((double)i)*mesh_width, 0.0);
-		grid[(i*grid_points_1d) + (grid_points_1d-1)] = eval_init_func(((double)i)*mesh_width, 1.0);
+		grid[i*grid_points_1d] = eval_init_func(((float)i)*mesh_width, 0.0);
+		grid[(i*grid_points_1d) + (grid_points_1d-1)] = eval_init_func(((float)i)*mesh_width, 1.0);
 	}
 }
 
@@ -270,7 +272,7 @@ void init_grid(double* grid)
  *
  * @param b the right hand side
  */
-void init_b(double* b)
+void init_b(float* b)
 {
 	// set all points to zero
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
@@ -285,7 +287,7 @@ void init_b(double* b)
  * @param dest destination grid
  * @param src source grid
  */
-void g_copy(double* dest, double* src)
+void g_copy(float* dest, float* src)
 {
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
 	{
@@ -300,9 +302,9 @@ void g_copy(double* dest, double* src)
  * @param grid1 first grid
  * @param grid2 second grid
  */
-double g_dot_product(double* grid1, double* grid2)
+float g_dot_product(float* grid1, float* grid2)
 {
-	double tmp = 0.0;
+	float tmp = 0.0;
 
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
@@ -322,7 +324,7 @@ double g_dot_product(double* grid1, double* grid2)
  * @param grid grid to be scaled
  * @param scalar scalar which is used to scale to grid
  */
-void g_scale(double* grid, double scalar)
+void g_scale(float* grid, float scalar)
 {
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
@@ -341,7 +343,7 @@ void g_scale(double* grid, double scalar)
  * @param src source grid
  * @param scalar scalar to scale to source grid
  */
-void g_scale_add(double* dest, double* src, double scalar)
+void g_scale_add(float* dest, float* src, float scalar)
 {
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
@@ -359,23 +361,32 @@ void g_scale_add(double* dest, double* src, double scalar)
  * @param grid grid for which the stencil should be evaluated
  * @param result grid where the stencil's evaluation should be stored
  */
-void g_product_operator(double* grid, double* result)
+void g_product_operator(float* grid, float* result)
 {
-	double mesh_width = 1.0/((double)(grid_points_1d-1));
+	// 2. Allocate Memory on Host and Device
+    cl_mem grid_buffer;
+    cl_mem result_buffer;
+    cl_mem grid_points_1d_buffer;
+    grid_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), grid, &err);
+    result_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, grid_points_1d * grid_points_1d * sizeof(float), NULL, &err);
 
-	for (int i = 1; i < grid_points_1d-1; i++)
-	{
-		for (int j = 1; j < grid_points_1d-1; j++)
-		{
-			result[(i*grid_points_1d)+j] =  (
-							(4.0*grid[(i*grid_points_1d)+j]) 
-							- grid[((i+1)*grid_points_1d)+j]
-							- grid[((i-1)*grid_points_1d)+j]
-							- grid[(i*grid_points_1d)+j+1]
-							- grid[(i*grid_points_1d)+j-1]
-							) * (mesh_width*mesh_width);
-		}
-	}
+    // 3. Invoke Kernel
+    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *) &grid_buffer);
+    // err = clSetKernelArg(kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
+    err = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *) &result_buffer);
+    // err = clSetKernelArg(kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
+    err = clSetKernelArg(kernel, 5, sizeof(cl_int), (void *) &grid_points_1d);
+    clFinish(command_queue);
+    globalWorkSize[0] = grid_points_1d;
+    globalWorkSize[1] = grid_points_1d;
+    localWorkSize[0] = BLOCK_SIZE;
+    localWorkSize[1] = BLOCK_SIZE;
+    err = clEnqueueNDRangeKernel(command_queue, g_product_kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+   	clFinish(command_queue);
+
+   	// 4. Copy result from device
+    err = clEnqueueReadBuffer(command_queue, result_buffer, CL_TRUE, 0, grid_points_1d * grid_points_1d * sizeof(float), result, 0, NULL, &event);
+    clReleaseEvent(event);
 }
 
 /**
@@ -390,30 +401,30 @@ void g_product_operator(double* grid, double* result)
  * @param cg_max_iterations max. number of CG iterations 
  * @param cg_eps the CG's epsilon
  */
-std::size_t solve(double* grid, double* b, std::size_t cg_max_iterations, double cg_eps)
+std::size_t solve(float* grid, float* b, std::size_t cg_max_iterations, float cg_eps)
 {
 	std::cout << "Starting Conjugated Gradients" << std::endl;
 
-	double eps_squared = cg_eps*cg_eps;
+	float eps_squared = cg_eps*cg_eps;
 	std::size_t needed_iters = 0;
 
 	// define temporal vectors
-	double* q = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
-	double* r = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
-	double* d = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
-	double* b_save = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
+	float* q = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
+	float* r = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
+	float* d = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
+	float* b_save = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
 			
 	g_copy(q, grid);
 	g_copy(r, grid);
 	g_copy(d, grid);
 	g_copy(b_save, b);
 	
-	double delta_0 = 0.0;
-	double delta_old = 0.0;
-	double delta_new = 0.0;
-	double beta = 0.0;
-	double a = 0.0;
-	double residuum = 0.0;
+	float delta_0 = 0.0;
+	float delta_old = 0.0;
+	float delta_new = 0.0;
+	float beta = 0.0;
+	float a = 0.0;
+	float residuum = 0.0;
 	
 	g_product_operator(grid, d);
 	g_scale_add(b, d, -1.0);
@@ -499,16 +510,16 @@ int main(int argc, char* argv[])
 	}
 	
 	// read cli arguments
-	double mesh_width = atof(argv[1]);
+	float mesh_width = atof(argv[1]);
 	size_t cg_max_iterations = atoi(argv[2]);
-	double cg_eps = atof(argv[3]);
+	float cg_eps = atof(argv[3]);
 
 	// calculate grid points per dimension
 	grid_points_1d = (std::size_t)(1.0/mesh_width)+1;
 	
 	// initialize the gird and rights hand side
-	double* grid = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
-	double* b = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
+	float* grid = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
+	float* b = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
 	init_grid(grid);
 	store_grid(grid, "initial_condition.gnuplot");
 	init_b(b);
@@ -519,10 +530,24 @@ int main(int argc, char* argv[])
 	context = clCreateContext(0, 1, &devices[ch_dev], NULL, NULL, &err);
 	command_queue = clCreateCommandQueue(context, devices[ch_dev], 0, &err);
 
+	// Compiling Kernels
+	size_t program_length;
+	void *buffer;
+	buffer = readProgramToBuffer("g_product_kernel.cl", &program_length);
+	program = clCreateProgramWithSource(context, 1, (const char **) &buffer, &program_length, &err);
+	free(buffer);
+	err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+	if(err != CL_SUCCESS)
+	{
+		printBuildLog();
+		exit(1);
+	}
+	g_product_kernel = clCreateKernel(program, "g_product_operator_parallel", &err);
+
 	// solve Poisson equation using CG method
 	timer_start();
 	solve(grid, b, cg_max_iterations, cg_eps);
-	double time = timer_stop();
+	float time = timer_stop();
 	store_grid(grid, "solution.gnuplot");
 	
 	std::cout << std::endl << "Needed time: " << time << " s" << std::endl << std::endl;
