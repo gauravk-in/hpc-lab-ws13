@@ -173,13 +173,12 @@ void init_b(double* b)
  // Test
 void g_copy(double* dest, double* src)
 {
-	/*	
+	/*
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
 	{
 		dest[i] = src[i];
 	}
 	*/
-
 	dest[0:grid_points_1d*grid_points_1d] = src[0:grid_points_1d*grid_points_1d];
 }
 
@@ -196,7 +195,7 @@ double g_dot_product(double* grid1, double* grid2)
 	double tmp = 0.0;
 	double* mult = (double*)_mm_malloc((grid_points_1d-2)*(grid_points_1d-2)*sizeof(double), 64);
 
-	
+	/*
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -204,13 +203,11 @@ double g_dot_product(double* grid1, double* grid2)
 			tmp += (grid1[(i*grid_points_1d)+j] * grid2[(i*grid_points_1d)+j]);
 		}
 	}
-	
+	*/
 
-	/*
 	mult[0:((grid_points_1d-2)*(grid_points_1d-2))] = grid1[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] * grid2[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)];
 	
 	tmp = __sec_reduce_add(mult[0:((grid_points_1d-2)*(grid_points_1d-2))]);
-	*/
 	
 	return tmp;
 }
@@ -225,9 +222,7 @@ double g_dot_product(double* grid1, double* grid2)
  // Test
 void g_scale(double* grid, double scalar)
 {
-	
-	int start;
-	/*	
+	/*
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -237,13 +232,7 @@ void g_scale(double* grid, double scalar)
 	}
 	*/
 	
-	for (int i = 1; i < grid_points_1d-1; i++)
-	{
-		start = ((i*grid_points_1d) + 1);
-		grid[start:(grid_points_1d-2)] = grid[start:(grid_points_1d-2)] * scalar;
-	}
-	
-	//grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] = grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] *  scalar;
+	grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] *= scalar;
 }
 
 /**
@@ -257,8 +246,6 @@ void g_scale(double* grid, double scalar)
  // Test
 void g_scale_add(double* dest, double* src, double scalar)
 {
-	
-	int start;
 	/*
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
@@ -269,15 +256,7 @@ void g_scale_add(double* dest, double* src, double scalar)
 	}
 	*/
 	
-		
-	for (int i = 1; i < grid_points_1d-1; i++)
-	{
-		start = ((i*grid_points_1d) + 1);
-		dest[start:(grid_points_1d-2)] = dest[start:(grid_points_1d-2)] + (scalar * src[start:(grid_points_1d-2)]); 	
-	}
-		
-
-	//dest[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] += (scalar*src[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)]);
+	dest[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] += (scalar*src[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)]);
 	
 }
 
@@ -296,6 +275,7 @@ void g_product_operator(double* grid, double* result)
 	
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
+		#pragma ivdep 
 		for (int j = 1; j < grid_points_1d-1; j++)
 		{
 			result[(i*grid_points_1d)+j] =  (
@@ -308,7 +288,7 @@ void g_product_operator(double* grid, double* result)
 		}
 	}
 	
-
+	
 	/*
 	result[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] = (
 			(4.0*grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)])
@@ -317,8 +297,8 @@ void g_product_operator(double* grid, double* result)
 			- grid[(grid_points_1d+2):(grid_points_1d-2)*(grid_points_1d-2)]
 			- grid[(grid_points_1d):(grid_points_1d-2)*(grid_points_1d-2)]
 			) * (mesh_width*mesh_width);
+	*/
 	
-	*/	
 }
 
 /**

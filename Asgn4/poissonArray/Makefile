@@ -4,7 +4,7 @@ CC=mpic++
 CCC=icc
 CCFLAGS=-O3
 
-all: poisson poisson_mpi lapiae
+all: poisson lapiae lapsimd
 
 poisson: poisson.cpp
 	$(CCC) -o $@ $^
@@ -15,5 +15,8 @@ poisson_mpi: poisson_mpi.cpp
 lapiae: iae_poisson.cpp
 	$(CCC) -o $@ $^
 
+lapsimd: simd_poisson.cpp
+	$(CCC) -o $@ $^
+
 clean:
-	rm -rf *.o poisson poisson_mpi lapiae *.gnuplot
+	rm -rf *.o poisson poisson_mpi lapiae lapsimd *.gnuplot
