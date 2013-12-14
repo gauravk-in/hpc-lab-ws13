@@ -2,7 +2,7 @@
 
 __kernel void g_product_operator_parallel (	__global const float* grid,
 											__global float* result,
-											__global int grid_points_1d)
+											int grid_points_1d)
 {
 	float mesh_width = 1.0/((float)(grid_points_1d-1));
 	
