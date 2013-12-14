@@ -5,7 +5,7 @@
 ******************************************************************************/
 // @author Alexander Heinecke (Alexander.Heinecke@mytum.de)
 
-#include <x86intrin.h>
+#include <immintrin.h>
 #include <cstdlib>
 #include <string>
 #include <iostream>
