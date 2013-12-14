@@ -82,8 +82,8 @@ void selectDevice()
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), (void*)&max_compute_units, NULL);
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE , sizeof(size_t), (void*)&max_work_group_size, NULL);
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(cl_uint), (void*)&max_work_item_dim, NULL);
-    		err = clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), (void*)global_mem_size, NULL);
-    		err = clGetDeviceInfo(devices[i], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), (void*)local_mem_size, NULL);
+    		err = clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), (void*)&global_mem_size, NULL);
+    		err = clGetDeviceInfo(devices[i], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), (void*)&local_mem_size, NULL);
 
     		max_work_item_size = (size_t *) malloc(sizeof(size_t) * (size_t)max_work_item_dim);
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * (size_t)max_work_item_dim, (void*)max_work_item_size, NULL);
