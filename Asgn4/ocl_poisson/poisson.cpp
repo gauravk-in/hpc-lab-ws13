@@ -255,7 +255,7 @@ void g_product_operator(double* grid, double* result)
  * @param cg_max_iterations max. number of CG iterations 
  * @param cg_eps the CG's epsilon
  */
-std::size_t solve(double* grid, double* b, std::size_t cg_max_iterations, double cg_eps)
+void solve(double* grid, double* b, std::size_t cg_max_iterations, double cg_eps)
 {
 	std::cout << "Starting Conjugated Gradients" << std::endl;
 
