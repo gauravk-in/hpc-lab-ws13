@@ -73,6 +73,8 @@ void selectDevice()
 	    	size_t max_work_group_size;
 	    	cl_uint max_work_item_dim;
 	    	size_t* max_work_item_size;
+	    	cl_ulong local_mem_size;
+	    	cl_ulong global_mem_size;
 	    	int j;
 
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_NAME, 20, (void*)device_name, NULL);
@@ -80,15 +82,20 @@ void selectDevice()
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), (void*)&max_compute_units, NULL);
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE , sizeof(size_t), (void*)&max_work_group_size, NULL);
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(cl_uint), (void*)&max_work_item_dim, NULL);
+    		err = clGetDeviceInfo(devices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), (void*)global_mem_size, NULL);
+    		err = clGetDeviceInfo(devices[i], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), (void*)local_mem_size, NULL);
+
     		max_work_item_size = (size_t *) malloc(sizeof(size_t) * (size_t)max_work_item_dim);
     		err = clGetDeviceInfo(devices[i], CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(size_t) * (size_t)max_work_item_dim, (void*)max_work_item_size, NULL);
     		printf("devices[%d] Name = %s; Compiler = %s\n", i, device_name, comp_avail ? "Available" : "Not available");
-    		printf("Max Compute Units = %u\n", (unsigned int)max_compute_units);
-    		printf("Max Work Item Dim = %u\n", (unsigned int)max_work_item_dim);
+    		printf("Max Compute Units = %d\n", (unsigned int)max_compute_units);
+    		printf("Max Work Item Dim = %d\n", (unsigned int)max_work_item_dim);
     		printf("Max Work Item Sizes = ");
     		for(j=0; j<max_work_item_dim; j++)
     			printf("%u ", max_work_item_size[j]);
     		printf("\n");
+    		printf("Global Mem Size = %lu\n", (unsigned long)global_mem_size);
+    		printf("Local Mem Size = %lu\n", (unsigned long)local_mem_size);
     	}
     	printf("\n");
 	}
