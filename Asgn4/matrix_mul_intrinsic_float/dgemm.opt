@@ -1,0 +1,80 @@
+
+<;-1:-1;IPO ROUTINE ATTRIBUTES PROPAGATION;;0>
+  ROUTINE ATTRIBUTE PROPAGATION TOTALS: 
+
+      RDECL: NSE(0->0), AR(0->0)
+      ENTRY: SE(0->0), DSE(0->0), AR(0->0)
+
+
+
+<;-1:-1;IPO MODREF;;0>
+  CI-MOD: TOTAL(4):OTHER(4)
+
+  CI-REF: TOTAL(4):OTHER(4)
+
+
+<;-1:-1;IPO;;0>
+WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+
+WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+
+WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: disabled
+  -inline-max-per-compile: disabled
+
+
+<timer.c;13:17;IPO INLINING;get_time;0>
+INLINING REPORT: (get_time) [1/4=25.0%]
+
+  -> clock(EXTERN)
+  -> gettimeofday(EXTERN)
+
+
+<timer.c;35:38;IPO INLINING;print_flops;0>
+INLINING REPORT: (print_flops) [2/4=50.0%]
+
+  -> printf(EXTERN)
+  -> get_ToD_diff_time(2) (isz = 13) (sz = 20 (5+15))
+  -> printf(EXTERN)
+  -> get_ticks_diff_time(3) (isz = 5) (sz = 12 (4+8))
+
+
+<timer.c;30:32;IPO INLINING;get_ticks_diff_time;0>
+INLINING REPORT: (get_ticks_diff_time) [3/4=75.0%]
+
+  -> clock(EXTERN)
+
+
+<timer.c;21:26;IPO INLINING;get_ToD_diff_time;0>
+INLINING REPORT: (get_ToD_diff_time) [4/4=100.0%]
+
+  -> gettimeofday(EXTERN)
+
+
+<timer.c;-1:-1;PGO;print_flops;0>
+  STATIC:timer.c  print_flops
+
+<timer.c;-1:-1;PGO;get_ticks_diff_time;0>
+  STATIC:timer.c  get_ticks_diff_time
+
+<timer.c;-1:-1;PGO;get_ToD_diff_time;0>
+  STATIC:timer.c  get_ToD_diff_time
+
+<timer.c;-1:-1;PGO;get_time;0>
+  STATIC:timer.c  get_time
+
+<;-1:-1;PGO;;0>
+
+      4 FUNCTIONS HAD VALID STATIC PROFILES
+
+  IPO CURRENT  QUALITY METRIC:  50.0%
+  IPO POSSIBLE QUALITY METRIC:  50.0%
+  IPO QUALITY  METRIC RATIO:   100.0%
+
+
