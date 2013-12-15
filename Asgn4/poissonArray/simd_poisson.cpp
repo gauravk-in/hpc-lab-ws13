@@ -98,7 +98,7 @@ void store_grid(double* grid, std::string filename)
  *
  * @return the initial value at position (x,y)
  */
-double eval_init_func(double x, double y)
+__declspec(vector) double eval_init_func(double x, double y)
 {
 	return (x*x)*(y*y);
 }
@@ -112,6 +112,11 @@ double eval_init_func(double x, double y)
  // Test
 void init_grid(double* grid)
 {
+	
+	double* x = (double*)_mm_malloc(grid_points_1d*sizeof(double), 64); 
+	double* y = (double*)_mm_malloc(grid_points_1d*sizeof(double), 64);
+	double* a = (double*)_mm_malloc(grid_points_1d*sizeof(double), 64);
+
 	// set all points to zero
 	/*
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
@@ -123,7 +128,7 @@ void init_grid(double* grid)
 
 	double mesh_width = 1.0/((double)(grid_points_1d-1));
 	
-	
+	/*	
 	for (int i = 0; i < grid_points_1d; i++)
 	{
 		// x-boundaries
@@ -133,16 +138,33 @@ void init_grid(double* grid)
 		grid[i*grid_points_1d] = eval_init_func(((double)i)*mesh_width, 0.0);
 		grid[(i*grid_points_1d) + (grid_points_1d-1)] = eval_init_func(((double)i)*mesh_width, 1.0);
 	}
+	*/
+
+	a[0] = 0.0;        
+	a[1:(grid_points_1d-1)] = a[0:(grid_points_1d-1)] + 1.0;
 	
 	/*
-	// x-boundaries
-	grid[0:grid_points_1d] = eval_init_func(0.0, ((double)i)*mesh_width);
-	grid[((grid_points_1d)*(grid_points_1d-1)):(grid_points_1d)] = eval_init_func(1.0, ((double)i)*mesh_width);
-	// y-boundaries
-	grid[0:grid_points_1d:grid_points_1d] = eval_init_func(((double)i)*mesh_width, 0.0);
-	grid[(grid_points_1d-1):(grid_points_1d):grid_points_1d] = eval_init_func(((double)i)*mesh_width, 1.0);
+	for(int i = 0; i < grid_points_1d; i++)
+	{
+		printf("a[%d] = %e\n", i, a[i]);
+	}
 	*/
 	
+	x[0:grid_points_1d] = 0.0;
+	y[0:grid_points_1d] = a[0:grid_points_1d] * mesh_width;
+
+	//x-boundaries upper
+	grid[0:grid_points_1d] = eval_init_func(x[0:grid_points_1d], y[0:grid_points_1d]);
+	//y-boundaries left
+	grid[0:grid_points_1d:grid_points_1d] = eval_init_func(y[0:grid_points_1d], x[0:grid_points_1d]);
+
+	x[0:grid_points_1d] = 1.0;
+
+	//x-boundaries lower
+	grid[((grid_points_1d)*(grid_points_1d-1)):(grid_points_1d)] = eval_init_func(x[0:grid_points_1d], y[0:grid_points_1d]);
+	//y-boundaries right
+	grid[(grid_points_1d-1):(grid_points_1d):(grid_points_1d)] = eval_init_func(y[0:grid_points_1d], x[0:grid_points_1d]);
+			
 }
 
 /**
@@ -173,12 +195,13 @@ void init_b(double* b)
  // Test
 void g_copy(double* dest, double* src)
 {
-	/*
+	/*	
 	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
 	{
 		dest[i] = src[i];
 	}
 	*/
+
 	dest[0:grid_points_1d*grid_points_1d] = src[0:grid_points_1d*grid_points_1d];
 }
 
@@ -195,7 +218,7 @@ double g_dot_product(double* grid1, double* grid2)
 	double tmp = 0.0;
 	double* mult = (double*)_mm_malloc((grid_points_1d-2)*(grid_points_1d-2)*sizeof(double), 64);
 
-	/*
+	/*	
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -204,11 +227,17 @@ double g_dot_product(double* grid1, double* grid2)
 		}
 	}
 	*/
-
-	mult[0:((grid_points_1d-2)*(grid_points_1d-2))] = grid1[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] * grid2[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)];
 	
-	tmp = __sec_reduce_add(mult[0:((grid_points_1d-2)*(grid_points_1d-2))]);
 	
+	for (int i = 1; i < grid_points_1d-1; i++)
+	{
+		mult[(i-1)*(grid_points_1d-2):(grid_points_1d-2)] = 
+				grid1[((i*grid_points_1d)+1):(grid_points_1d-2)] * grid2[((i*grid_points_1d)+1):(grid_points_1d-2)];
+		
+		tmp = __sec_reduce_add(mult[0:((grid_points_1d-2)*(grid_points_1d-2))]);
+	}
+	
+		
 	return tmp;
 }
 
@@ -222,7 +251,9 @@ double g_dot_product(double* grid1, double* grid2)
  // Test
 void g_scale(double* grid, double scalar)
 {
-	/*
+	
+	int start;
+	/*	
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
 		for (int j = 1; j < grid_points_1d-1; j++)
@@ -232,7 +263,13 @@ void g_scale(double* grid, double scalar)
 	}
 	*/
 	
-	grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] *= scalar;
+	for (int i = 1; i < grid_points_1d-1; i++)
+	{
+		start = ((i*grid_points_1d) + 1);
+		grid[start:(grid_points_1d-2)] = grid[start:(grid_points_1d-2)] * scalar;
+	}
+	
+	//grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] = grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] *  scalar;
 }
 
 /**
@@ -246,6 +283,8 @@ void g_scale(double* grid, double scalar)
  // Test
 void g_scale_add(double* dest, double* src, double scalar)
 {
+	
+	int start;
 	/*
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
@@ -256,7 +295,15 @@ void g_scale_add(double* dest, double* src, double scalar)
 	}
 	*/
 	
-	dest[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] += (scalar*src[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)]);
+		
+	for (int i = 1; i < grid_points_1d-1; i++)
+	{
+		start = ((i*grid_points_1d) + 1);
+		dest[start:(grid_points_1d-2)] = dest[start:(grid_points_1d-2)] + (scalar * src[start:(grid_points_1d-2)]); 	
+	}
+		
+
+	//dest[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] += (scalar*src[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)]);
 	
 }
 
@@ -275,7 +322,7 @@ void g_product_operator(double* grid, double* result)
 	
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
-		#pragma ivdep 
+		#pragma vector always
 		for (int j = 1; j < grid_points_1d-1; j++)
 		{
 			result[(i*grid_points_1d)+j] =  (
@@ -288,17 +335,20 @@ void g_product_operator(double* grid, double* result)
 		}
 	}
 	
-	
+
 	/*
-	result[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)] = (
-			(4.0*grid[(grid_points_1d+1):(grid_points_1d-2)*(grid_points_1d-2)])
-			- grid[((2*grid_points_1d)+1):(grid_points_1d-2)*(grid_points_1d-2)]
-			- grid[1:(grid_points_1d-2)*(grid_points_1d-2)]
-			- grid[(grid_points_1d+2):(grid_points_1d-2)*(grid_points_1d-2)]
-			- grid[(grid_points_1d):(grid_points_1d-2)*(grid_points_1d-2)]
-			) * (mesh_width*mesh_width);
+	for (int i = 1; i < grid_points_1d-1; i++)
+	{
+		result[((i*grid_points_1d)+1):(grid_points_1d-2)] = (
+								(4.0*grid[((i*grid_points_1d)+1):(grid_points_1d-2)])
+								- grid[(((i+1)*grid_points_1d)+1):(grid_points_1d-2)]
+								- grid[(((i-1)*grid_points_1d)+1):(grid_points_1d-2)]
+								- grid[((i*grid_points_1d)+2):(grid_points_1d-2)]
+								- grid[(i*grid_points_1d):(grid_points_1d-2)]
+								) * (mesh_width*mesh_width);
+	}
 	*/
-	
+		
 }
 
 /**
