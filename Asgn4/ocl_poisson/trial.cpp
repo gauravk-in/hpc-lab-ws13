@@ -1,3 +1,10 @@
+#include <immintrin.h>
+#include <cstdlib>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sys/time.h>
+
 #define BLOCK_SIZE 32
 
 #if defined __APPLE__ || defined(MACOSX)
@@ -162,17 +169,19 @@ void g_product_operator(float* grid, float* result)
     // err = clSetKernelArg(g_product_kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
     err = clSetKernelArg(g_product_kernel, 1, sizeof(cl_mem), (void *) &result_buffer);
     // err = clSetKernelArg(g_product_kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
-    err = clSetKernelArg(g_product_kernel, 2, sizeof(std::size_t), (void *) &grid_points_1d);
+    err = clSetKernelArg(g_product_kernel, 2, sizeof(cl_ulong), (void *) &grid_points_1d);
     clFinish(command_queue);
     globalWorkSize[0] = grid_points_1d-2;
     globalWorkSize[1] = grid_points_1d-2;
     localWorkSize[0] = BLOCK_SIZE;
     localWorkSize[1] = BLOCK_SIZE;
     err = clEnqueueNDRangeKernel(command_queue, g_product_kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+    printf("err = %d\n", err);
    	clFinish(command_queue);
 
    	// 4. Copy result from device
     err = clEnqueueReadBuffer(command_queue, result_buffer, CL_TRUE, 0, grid_points_1d * grid_points_1d * sizeof(float), result, 0, NULL, &event);
+    printf("err = %d\n", err);
     clReleaseEvent(event);
 
     clFinish(command_queue);
@@ -233,6 +242,19 @@ void store_grid(float* grid, std::string filename)
 	}
 
 	filestr.close();
+}
+
+/**
+ * calculate the grid's initial values for given grid points
+ *
+ * @param x the x-coordinate of a given grid point
+ * @param y the y-coordinate of a given grid point
+ *
+ * @return the initial value at position (x,y)
+ */
+float eval_init_func(float x, float y)
+{
+	return (x*x)*(y*y);
 }
 
 /**
@@ -297,11 +319,11 @@ int main(int argc, char* argv[])
 
 	g_product_operator(grid, result);
 
-	store_grid(result, result_ocl.gnuplot);
+	store_grid(result, "result_ocl.gnuplot");
 
 	g_product_operator_serial(grid, result_serial);
 
-	store_grid(result_serial, result_serial.gnuplot);
+	store_grid(result_serial, "result_serial.gnuplot");
 
 	_mm_free(grid);
 	_mm_free(result);

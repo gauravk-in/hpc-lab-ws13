@@ -378,7 +378,7 @@ void g_product_operator(float* grid, float* result)
     // err = clSetKernelArg(g_product_kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
     err = clSetKernelArg(g_product_kernel, 1, sizeof(cl_mem), (void *) &result_buffer);
     // err = clSetKernelArg(g_product_kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
-    err = clSetKernelArg(g_product_kernel, 2, sizeof(std::size_t), (void *) &grid_points_1d);
+    err = clSetKernelArg(g_product_kernel, 2, sizeof(cl_ulong), (void *) &grid_points_1d);
     clFinish(command_queue);
     globalWorkSize[0] = grid_points_1d-2;
     globalWorkSize[1] = grid_points_1d-2;
@@ -392,8 +392,6 @@ void g_product_operator(float* grid, float* result)
     clReleaseEvent(event);
 
     clFinish(command_queue);
-
-    printf("result[grid_points_1d+2] = %f\n", result[5*grid_points_1d+5]);
 }
 
 /**
