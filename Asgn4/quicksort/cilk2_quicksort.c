@@ -11,6 +11,8 @@
 #include <math.h>
 
 
+FILE *fp;
+
 void print_list(double *data, int length){
 	int i;
 	for(i = 0; i < length; i++)
@@ -49,8 +51,7 @@ void quicksort(double *data, int length){
 	//print_list(data, length);
 
 	/* recursion */
-	if(right > 2000) cilk_spawn quicksort(data, right);
-	else quicksort(data, right);
+	cilk_spawn quicksort(data, right);
 	quicksort(&(data[left]), length - left);
 
 	cilk_sync;
@@ -64,7 +65,7 @@ int check(double *data, int length){
 }
 
 
-int old_main(int length)
+int old_main(int length, int argc)
 {
 	//int length;
 	double *data;
@@ -103,56 +104,76 @@ int old_main(int length)
 
 	printf("Size of dataset: %d, elapsed time[s] %e \n", length, get_ToD_diff_time(time));
 
+	if(argc > 2){
+		fprintf(fp,"%e;", get_ToD_diff_time(time));
+	}
+
 	return(0);
 }
 
 int main(int argc, char **argv)
 {
-        int length;
+        int length, l;
         int nworkers;
 	int i, j, temp, temp2, temp3;
 	char nthreads[4];
-	
 
-        length = 10000000;
+	l = 100000;
 
         if(argc > 1){
-                length = atoi(argv[1]);
+                l = atoi(argv[1]);
 	}
-
-	for(i = 1; i < 256; i *= 2)
-	{
-		__cilkrts_end_cilk();	
+	if(argc > 2){
+		fp = fopen(argv[2], "a");
+	}
 	
-		sprintf(nthreads, "%d", i);
-
-		/*
-		temp3 = i;
-		temp2 = 48;	
-
-		for(j = 0; j<3; j++)
+	if(argc > 2)
+	{
+		fprintf(fp, ";");
+		
+		for(i = 1; i < 256; i *= 2)
 		{
-			temp = temp3 % 10;
-			nthreads[2-j] = (char) (temp2+temp);
-			temp3 -= temp;
-			temp3 /= 10;
-			printf("j = %d\n", temp);
+			fprintf(fp, "%d;", i);
 		}
 
-		nthreads[3] = (char) 0;
-
-		printf("nthreads : ");
-		printf("%s\n", nthreads);
-		*/		
-
-		__cilkrts_set_param("nworkers", nthreads);
-
-		nworkers = __cilkrts_get_nworkers();
-
-		printf("Intel Cilk Plus # workers: %d\n", nworkers);
-
-        	old_main(length);	
+		fprintf(fp, "\n");
 	}
+
+	for(j = 1; j < 101; j++)
+	{
+
+		length = j * l;
+
+		if(argc > 2)
+                {
+                	fprintf(fp, "%d;", length);
+                }
+		
+		for(i = 1; i < 256; i *= 2)
+		{
+			__cilkrts_end_cilk();	
+	
+			sprintf(nthreads, "%d", i);	
+
+			__cilkrts_set_param("nworkers", nthreads);
+
+			nworkers = __cilkrts_get_nworkers();
+
+			printf("Intel Cilk Plus # workers: %d\n", nworkers);
+		
+
+			old_main(length, argc);
+					
+		}	
+
+		if(argc > 2)
+                {
+                	fprintf(fp, "\n");
+                }
+		
+	}
+	
+	if(argc > 2) fclose(fp);
 
         return 0;
 }
