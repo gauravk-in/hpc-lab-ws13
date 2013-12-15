@@ -255,9 +255,65 @@ and compiles the Device Code to create the kernel.
 \pagebreak
 \section{Exercise 12: Matrix Multiplication with OpenCL}
 
-\subsection{Code Overview}
+\subsection{Overview}
+We were able to achieve Matrix Multiplication using OpenCL with Local Memory Blocking Optimization.
+Further details of our implementation are discussed below.
+
+The project consists of 2 files.
+\begin{itemize}
+	\item \textbf{main\_benchmark.c} - Host Code
+	\item \textbf{matrix\_mul\_kernel.c} - Device Code
+\end{itemize}
+
+\subsection{Algorithm}
+A simple implementation of Matrix Multiplication creates a 2 dimensional array of threads, one for
+each element of the product matrix. Each thread calculates the value of the element that it corresponds to. The threads are divided into Work Groups which run in parallel on the Compute Units
+in the device. Each Compute Unit has a number of Processing Elements, which process the Work Items
+(threads) in parallel. Each thread can be uniquely identified with combination of \textit{global} and \textit{local} ids in each dimension, which can be used to identify which element of the product
+matrix the thread must evaluate.
+
+As can be easily seen, the simple approach is suboptimal. The Computational Intensity of this approach is very low. For a matrix of width 1024, each thread performs 2048 Reads, 1024 Floating Point Multiplications, 1024 Floating Point Additions and 1 Write operation. If we are able to reduce the number of read operations from global memory, by making use of the Local Memory, we can optimize the performance. 
+
+The Local Memory on the GPUs connected to Linux Cluster is 32 KB. We can store 3 matrices of width 32 in this memory, while still keeping space for temporary variables. In our approach, we divide
+matrices into square blocks of width 32. Each work group correspondingly is also a square matrix of width 32 i.e. it has 32x32 threads. 
+
+Each thread in a Work Group reads one element from each input matrix from Global Memory
+and stores it into Local Memory. Now we have the entire block of size 32x32 in low latency Local Memory. Each thread computes the partial result for its corresponding element in the product matrix
+from these values. This way, each thread performs 2 Read operations, 32 Floating Point
+Multiplications, 32 Floating Point Additions and 1 Write operation for calculating the partial result. The computational intensity of this approach is almost 32 times better than the simple approach.
 
 \subsection{Results and Analysis}
+When talking about performance results from OpenCL, care must be taken to understand that apart from the processing time,
+a lot of overhead is spent in compiling the kernel sending the data to the Global Memory of the GPU, and reading the results
+back from the GPU. 
+
+Our results show a very  high performance if we consider only time spent to compile the kernel. This is expected, owing to high
+parallelism of an application like Matrix Multiplication, and the large number of small cores on the GPU. Following image is the
+graphic of the result considering only the time used to execute the kernel.
+
+\begin{figure}[hb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{mat_mul_ocl_vs_omp_kernel}
+	\caption{\textbf{Comparison of GFLOP/s achieved for Matrix Multiplication.} Blue line depicts performance using OpenCL,
+		and Orange line depicts performance with OpenMP. We consider only time spent in executing the kernels.}
+\end{figure}
+
+The performance steeply degrades when we consider the overhead spent in compiling the kernel, sending the input data to the GPU
+and reading the output back from the GPU memory. Following image shows the result keeping this overhead in consideration.
+
+\begin{figure}[hb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{mat_mul_ocl_vs_omp_overhead}
+	\caption{\textbf{Comparison of GFLOP/s achieved for Matrix Multiplication with overhead.} Blue line depicts performance using
+		OpenCL, and Orange line depicts performance with OpenMP. Here, we consider the total time spent in compiling kernels,
+		transferring input matrices to GPU, execution of kernels and reading output matrix from GPU.}
+\end{figure}
+
+You can also observe that performance with OpenCL nearly matches performance with OpenMP at larger width. The impact of the overhead
+is less when the problem size is large.
+
+The OpenMP implementation used for this analysis, is running on 8 cores. It is optimized for Memory Blocking and uses Intel
+Compiler Intrinsics features to facilitate vectorization.
 
 \pagebreak
 \section{Exercise 12: Laplace Equation with OpenCL}
