@@ -38,6 +38,7 @@ cl_context context;
 cl_command_queue command_queue;
 cl_program program;
 cl_kernel g_product_kernel;
+cl_kernel g_dot_product_kernel;
 
 size_t globalWorkSize[3];
 size_t localWorkSize[3];
@@ -307,17 +308,39 @@ void g_copy(float* dest, float* src)
  */
 float g_dot_product(float* grid1, float* grid2)
 {
-	float tmp = 0.0;
+	float dot_product;
 
-	for (int i = 1; i < grid_points_1d-1; i++)
-	{
-		for (int j = 1; j < grid_points_1d-1; j++)
-		{
-			tmp += (grid1[(i*grid_points_1d)+j] * grid2[(i*grid_points_1d)+j]);
-		}
-	}
+	// 2. Allocate Memory on Host and Device
+    cl_mem grid_buffer;
+    cl_mem result_buffer;
+    cl_mem reduce_tmp_buffer;
+    cl_mem dot_product_buffer;
+    grid1_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), grid1, &err);
+    grid2_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), grid2, &err);
+    reduce_tmp_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY, grid_points_1d * sizeof(float), NULL, &err);
+
+    // 3. Invoke Kernel
+    err = clSetKernelArg(g_product_kernel, 0, sizeof(cl_mem), (void *) &grid1_buffer);
+    // err = clSetKernelArg(g_product_kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
+    err = clSetKernelArg(g_product_kernel, 1, sizeof(cl_mem), (void *) &grid2_buffer);
+    // err = clSetKernelArg(g_product_kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
+    err = clSetKernelArg(g_product_kernel, 2, sizeof(cl_mem), (void *) &reduce_tmp_buffer);
+    err = clSetKernelArg(g_product_kernel, 3, sizeof(cl_ulong), (void *) &grid_points_1d);
+    clFinish(command_queue);
+    globalWorkSize[0] = grid_points_1d-2;
+    //globalWorkSize[1] = grid_points_1d-2;
+    localWorkSize[0] = BLOCK_SIZE;
+    //localWorkSize[1] = BLOCK_SIZE;
+    err = clEnqueueNDRangeKernel(command_queue, g_dot_product_kernel, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+   	clFinish(command_queue);
+
+   	// 4. Copy result from device
+    err = clEnqueueReadBuffer(command_queue, reduce_tmp_buffer, CL_TRUE, 0, sizeof(float), dot_product, 0, NULL, &event);
+    clReleaseEvent(event);
+
+//	tmp += (grid1[(i*grid_points_1d)+j] * grid2[(i*grid_points_1d)+j]);
 	
-	return tmp;
+	return dot_product;
 }
 
 /**
@@ -371,7 +394,7 @@ void g_product_operator(float* grid, float* result)
     cl_mem result_buffer;
     cl_mem grid_points_1d_buffer;
     grid_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), grid, &err);
-    result_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), result, &err);
+    result_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, grid_points_1d * grid_points_1d * sizeof(float), NULL, &err);
 
     // 3. Invoke Kernel
     err = clSetKernelArg(g_product_kernel, 0, sizeof(cl_mem), (void *) &grid_buffer);
@@ -540,7 +563,7 @@ int main(int argc, char* argv[])
 	// Compiling Kernels
 	size_t program_length;
 	void *buffer;
-	buffer = readProgramToBuffer("g_product_kernel.cl", &program_length);
+	buffer = readProgramToBuffer("poisson_kernels.cl", &program_length);
 	program = clCreateProgramWithSource(context, 1, (const char **) &buffer, &program_length, &err);
 	free(buffer);
 	err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
@@ -550,6 +573,7 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 	g_product_kernel = clCreateKernel(program, "g_product_operator_parallel", &err);
+	g_dot_product_kernel = clCreateKernel(program, "g_dot_product_parallel", &err);
 
 	// solve Poisson equation using CG method
 	timer_start();
