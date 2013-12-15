@@ -205,6 +205,11 @@ void g_copy(double* dest, double* src)
 	dest[0:grid_points_1d*grid_points_1d] = src[0:grid_points_1d*grid_points_1d];
 }
 
+void g_copy2(double** dest, double** src)
+{
+	dest[0:grid_points_1d][0:grid_points_1d] = src[0:grid_points_1d][0:grid_points_1d];
+}
+
 /**
  * calculates the dot product of the two grids (only inner grid points are modified due 
  * to Dirichlet boundary conditions)
@@ -372,12 +377,32 @@ void solve(double* grid, double* b, std::size_t cg_max_iterations, double cg_eps
 	double* r = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
 	double* d = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
 	double* b_save = (double*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(double), 64);
-			
+	
+	// define 2d arrays
+	double** q_2d = (double**)malloc(grid_points_1d*sizeof(double*));
+	double** r_2d = (double**)malloc(grid_points_1d*sizeof(double*));
+	double** d_2d = (double**)malloc(grid_points_1d*sizeof(double*));
+	double** b_save_2d = (double**)malloc(grid_points_1d*sizeof(double*));	
+	
+	q_2d[0:grid_points_1d] = &(q[0:grid_points_1d:grid_points_1d]);
+	r_2d[0:grid_points_1d] = &(r[0:grid_points_1d:grid_points_1d]);
+	d_2d[0:grid_points_1d] = &(d[0:grid_points_1d:grid_points_1d]);
+	b_save_2d[0:grid_points_1d] = &(b_save[0:grid_points_1d:grid_points_1d]);
+	
+	
+
 	g_copy(q, grid);
 	g_copy(r, grid);
 	g_copy(d, grid);
 	g_copy(b_save, b);
 	
+	q_2d[0:grid_points_1d] = &(q[0:grid_points_1d:grid_points_1d]);       
+	r_2d[0:grid_points_1d] = &(r[0:grid_points_1d:grid_points_1d]);        
+	d_2d[0:grid_points_1d] = &(d[0:grid_points_1d:grid_points_1d]);       
+	b_save_2d[0:grid_points_1d] = &(b_save[0:grid_points_1d:grid_points_1d]);
+
+	g_copy2(q_2d, r_2d);
+
 	double delta_0 = 0.0;
 	double delta_old = 0.0;
 	double delta_new = 0.0;
