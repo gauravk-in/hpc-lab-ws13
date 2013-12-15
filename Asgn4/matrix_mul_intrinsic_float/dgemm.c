@@ -63,10 +63,9 @@ int main(int argc, char **argv)
                 for (j = 0; j < n; j++){
                         *(a + i * n + j) = (float)i + (float)j;
                         *(b + i * n + j) = (float)(n - i) + (float)(n - j);
-			*(c + i * n + j) = 0.0;
         	}      
         }
-//        memset(c, 0, mem_size);
+        memset(c, 0, mem_size);
 
         time_marker_t time = get_time();
         float flops;

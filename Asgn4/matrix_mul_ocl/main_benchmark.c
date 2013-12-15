@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <sys/time.h>
+//#include <sys/time.h>
+#include "timer.h"
 
 #define BLOCK_SIZE 32 
 
@@ -138,40 +139,6 @@ void printBuildLog()
 	printf("BUILD LOG: \n %s", build_log);
 }
 
-void readMatrix(char *fileName, float *mat, int width)
-{
-	FILE *fp = fopen(fileName, "r");
-	int i, j;
-
-	for(i=0; i<width; i++)
-	{
-		for(j=0; j<width; j++)
-		{
-			fscanf(fp, "%f ", &mat[i * width + j]);
-		}
-	}
-
-	fclose(fp);
-	return;
-}
-
-void writeInputMatrix(char *fileName, float value, int width)
-{
-	FILE *fp = fopen(fileName, "w");
-	int i, j;
-
-	for(i=0; i<width; i++)
-	{
-		for(j=0; j<width; j++)
-		{
-			fprintf(fp, "%f ", value);
-		}
-		fprintf(fp, "\n");
-	}
-	fclose(fp);
-	return;
-}
-
 void writeMatrix(char *fileName, float *mat, int width)
 {
 	FILE *fp = fopen(fileName, "w");
@@ -189,34 +156,6 @@ void writeMatrix(char *fileName, float *mat, int width)
 	return;
 }
 
-void printMatrix(float *mat, int width)
-{
-	int i, j;
-
-	for(i=0; i<width; i++)
-	{
-		for(j=0; j<width; j++)
-		{
-			printf("%f ", mat[i * width + j]);
-		}
-		printf("\n");
-	}
-	return;
-}
-
-void fillMatrix(float *mat, int width, float value)
-{
-	int i, j;
-
-	for(i = 0; i<width; i++)
-	{
-		for(j=0; j<width; j++)
-		{
-			mat[i*width+j] = value;
-		}
-	}
-}
-
 int main(int argc, char **argv)
 {
 	size_t size;
@@ -230,41 +169,44 @@ int main(int argc, char **argv)
     size_t globalWorkSize[3];
     size_t localWorkSize[3];
     
-    struct timeval tv_start;
-    struct timeval tv_end;
-    unsigned long us;
-    struct timeval tv_start_kernel;
-    struct timeval tv_end_kernel;
-    unsigned long us_kernel;
+    time_marker_t time_full;
+    time_marker_t time_kernel;
+    float flops;
     
-    if(argc != 5)
+    if(argc == 1)
     {
-    	printf("Usage : %s <M_matrix.txt> <N_matrix.txt> <P_matrix.txt> <width>\n", argv[0]);
+    	width = 1024;
+    }
+    if(argc > 1)
+    {
+    	sscanf(argv[1], "%d", &width);
+    }
+    if(argc > 2)
+    {
+    	printf("Usage : %s <width>\n\tInitializes input matrices and performes multiplication");
     	exit(1);
     }
 
-    sscanf(argv[4], "%d", &width);
+    flops = 2.0 * width * width * width / 1000000000;
 
     size = width * width * sizeof(float);
 	M_host = (float *) malloc(size);
 	N_host = (float *) malloc(size);
 	P_host = (float *) malloc(size);
 
-	M_fileName = argv[1];
-	N_fileName = argv[2];
-	P_fileName = argv[3];
-
-    readMatrix(M_fileName, M_host, width);
-    readMatrix(N_fileName, N_host, width);
-
-	printf("\n***\nInitialization of OpenCL object and Context Begins!\n***\n");
+    for (i = 0; i < width; i++){
+            for (j = 0; j < width; j++){
+                    *(M_host + i * width + j) = (float)i + (float)j;
+                    *(N_host + i * width + j) = (float)(width - i) + (float)(width - j);
+    	}      
+    }
+    memset(P_host, 0, size);
 
 	// 1. Create Context and Command Queue
-	printf(" Select platform and device to use\n");
 	selectDevice();
 
-	// Start Time Here
-	gettimeofday(&tv_start, NULL);
+	// Start Time Here to consider overhead.
+	time_full = get_time();
 
 	context = clCreateContext(0, 1, &devices[ch_dev], NULL, NULL, &err);
 	command_queue = clCreateCommandQueue(context, devices[ch_dev], 0, &err);
@@ -293,7 +235,6 @@ int main(int argc, char **argv)
     N_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, width * width * sizeof(float), N_host, &err);
     P_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, width * width * sizeof(float), NULL, &err);
 
-    gettimeofday(&tv_start_kernel, NULL);
     // 3. Invoke Kernel
     err = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *) &M_buffer);
     err = clSetKernelArg(kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
@@ -307,35 +248,21 @@ int main(int argc, char **argv)
     localWorkSize[0] = BLOCK_SIZE;
     localWorkSize[1] = BLOCK_SIZE;
     
-    printf("Global Work Size = %d x %d\nLocal Work Size = %d x %d\n", globalWorkSize[0], globalWorkSize[1], localWorkSize[0], localWorkSize[1]);
+    // printf("Global Work Size = %d x %d\nLocal Work Size = %d x %d\n", globalWorkSize[0], globalWorkSize[1], localWorkSize[0], localWorkSize[1]);
+    time_kernel = get_time();
 
     err = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
    	clFinish(command_queue);
 
-   	gettimeofday(&tv_end_kernel, NULL);
+   	printf("GFLOP/s for only kernel = ");
+   	print_flops(flops, time_kernel);
 
     // 4. Copy result from device
-    // printf("\n***\nReading Result from Device Memory\n***\n");
     err = clEnqueueReadBuffer(command_queue, P_buffer, CL_TRUE, 0, width * width * sizeof(float), P_host, 0, NULL, &event);
     clReleaseEvent(event);
 
-    // Stop Time Here
-    gettimeofday(&tv_end, NULL);
-
-    us = (tv_end.tv_sec - tv_start.tv_sec) * 1000000;
-    us += ((tv_end.tv_usec - tv_start.tv_usec));
-
-    us_kernel = (tv_end_kernel.tv_sec - tv_start_kernel.tv_sec) * 1000000;
-    us_kernel += ((tv_end_kernel.tv_usec - tv_start_kernel.tv_usec));
-
-    printf("\nTime taken with memory, and kernel compilation overhead = %lu usec\n", us);
-    printf("\nTime taken for only kernel = %lu usec\n", us_kernel);
-
-    writeMatrix(P_fileName, P_host, width);
-
-    // printf("\n\n*** Successful, Result Stored in %s ***\n", P_fileName);
-
-    // 4. Clean Up!
+	printf("GFLOP/s with overhead = ");
+   	print_flops(flops, time_full);
 
     return 0;
 }
