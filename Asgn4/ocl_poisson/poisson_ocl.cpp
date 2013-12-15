@@ -311,10 +311,9 @@ float g_dot_product(float* grid1, float* grid2)
 	float dot_product;
 
 	// 2. Allocate Memory on Host and Device
-    cl_mem grid_buffer;
-    cl_mem result_buffer;
+    cl_mem grid1_buffer;
+    cl_mem grid2_buffer;
     cl_mem reduce_tmp_buffer;
-    cl_mem dot_product_buffer;
     grid1_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), grid1, &err);
     grid2_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), grid2, &err);
     reduce_tmp_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY, grid_points_1d * sizeof(float), NULL, &err);
@@ -335,7 +334,7 @@ float g_dot_product(float* grid1, float* grid2)
    	clFinish(command_queue);
 
    	// 4. Copy result from device
-    err = clEnqueueReadBuffer(command_queue, reduce_tmp_buffer, CL_TRUE, 0, sizeof(float), dot_product, 0, NULL, &event);
+    err = clEnqueueReadBuffer(command_queue, reduce_tmp_buffer, CL_TRUE, 0, sizeof(float), (void *)&dot_product, 0, NULL, &event);
     clReleaseEvent(event);
 
 //	tmp += (grid1[(i*grid_points_1d)+j] * grid2[(i*grid_points_1d)+j]);

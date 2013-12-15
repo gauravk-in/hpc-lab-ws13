@@ -26,15 +26,18 @@ __kernel void g_dot_product_parallel (	__global const float* grid1,
 	int x = 0;
 	int y = get_group_id(0) * BLOCKSIZE + get_local_id(0) + 1;
 	float tmp = 0.0;
+	float i;
+	float two = 2;
+	float log_width = ceil(log2((float)grid_points_1d-two));
 
 	for(x = 1; x < grid_points_1d-1; x++)
 		reduce_tmp[y] += grid1[y * grid_points_1d + x] * grid2[y * grid_points_1d + x];
 
-	for(i=log2(grid_points_1d-2); i>0;i--)
+	for(i=log_width; i>0; i-=1)
 	{
-		if(y <= pow(2, i))
+		if(y <= pown(two, i))
 		{
-			reduce_tmp[y % pow(2, i-1)] += reduce_tmp[y];
+			reduce_tmp[y % (unsigned long)pown(two, i-1)] += reduce_tmp[y];
 		}
 	}
 }
