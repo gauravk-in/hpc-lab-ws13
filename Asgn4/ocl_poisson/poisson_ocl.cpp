@@ -371,17 +371,17 @@ void g_product_operator(float* grid, float* result)
     cl_mem result_buffer;
     cl_mem grid_points_1d_buffer;
     grid_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), grid, &err);
-    result_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, grid_points_1d * grid_points_1d * sizeof(float), NULL, &err);
+    result_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), result, &err);
 
     // 3. Invoke Kernel
     err = clSetKernelArg(g_product_kernel, 0, sizeof(cl_mem), (void *) &grid_buffer);
     // err = clSetKernelArg(g_product_kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
-    err = clSetKernelArg(g_product_kernel, 2, sizeof(cl_mem), (void *) &result_buffer);
+    err = clSetKernelArg(g_product_kernel, 1, sizeof(cl_mem), (void *) &result_buffer);
     // err = clSetKernelArg(g_product_kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
-    err = clSetKernelArg(g_product_kernel, 5, sizeof(cl_int), (void *) &grid_points_1d);
+    err = clSetKernelArg(g_product_kernel, 2, sizeof(std::size_t), (void *) &grid_points_1d);
     clFinish(command_queue);
-    globalWorkSize[0] = grid_points_1d;
-    globalWorkSize[1] = grid_points_1d;
+    globalWorkSize[0] = grid_points_1d-2;
+    globalWorkSize[1] = grid_points_1d-2;
     localWorkSize[0] = BLOCK_SIZE;
     localWorkSize[1] = BLOCK_SIZE;
     err = clEnqueueNDRangeKernel(command_queue, g_product_kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
@@ -390,6 +390,10 @@ void g_product_operator(float* grid, float* result)
    	// 4. Copy result from device
     err = clEnqueueReadBuffer(command_queue, result_buffer, CL_TRUE, 0, grid_points_1d * grid_points_1d * sizeof(float), result, 0, NULL, &event);
     clReleaseEvent(event);
+
+    clFinish(command_queue);
+
+    printf("result[grid_points_1d+2] = %f\n", result[5*grid_points_1d+5]);
 }
 
 /**
@@ -519,6 +523,8 @@ int main(int argc, char* argv[])
 
 	// calculate grid points per dimension
 	grid_points_1d = (std::size_t)(1.0/mesh_width)+1;
+	printf("Grid Points 1d = %d\n", grid_points_1d);
+	
 	
 	// initialize the gird and rights hand side
 	float* grid = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
