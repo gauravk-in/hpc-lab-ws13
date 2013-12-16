@@ -158,14 +158,12 @@ void writeMatrix(char *fileName, float *mat, int width)
 
 int main(int argc, char **argv)
 {
-	size_t size;
+    size_t size;
     float *M_host;
     float *N_host;
     float *P_host;
-    char *M_fileName;
-    char *N_fileName;
-    char *P_fileName;
     int width;
+    int i, j;
     size_t globalWorkSize[3];
     size_t localWorkSize[3];
     
@@ -183,11 +181,11 @@ int main(int argc, char **argv)
     }
     if(argc > 2)
     {
-    	printf("Usage : %s <width>\n\tInitializes input matrices and performes multiplication");
+    	printf("Usage : %s <width>\n\tInitializes input matrices and performes multiplication", argv[0]);
     	exit(1);
     }
 
-    flops = 2.0 * width * width * width / 1000000000;
+    flops = 2.0 * width * width * width / 1000000;
 
     size = width * width * sizeof(float);
 	M_host = (float *) malloc(size);
