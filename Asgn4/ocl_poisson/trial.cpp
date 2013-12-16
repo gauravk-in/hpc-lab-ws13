@@ -30,7 +30,7 @@ int ch_dev;
 cl_context context;
 cl_command_queue command_queue;
 cl_program program;
-cl_kernel g_product_kernel;
+cl_kernel reduce_kernel;
 
 size_t globalWorkSize[3];
 size_t localWorkSize[3];
@@ -145,158 +145,15 @@ void printBuildLog()
 	printf("BUILD LOG: \n %s", build_log);
 }
 
-/// store number of grid points in one dimension
-std::size_t grid_points_1d = 0;
-
-/**
- * implements the the 5-point finite differences stencil (only inner grid points are modified due 
- * to Dirichlet boundary conditions)
- * 
- * @param grid grid for which the stencil should be evaluated
- * @param result grid where the stencil's evaluation should be stored
- */
-void g_product_operator(float* grid, float* result)
-{
-	// 2. Allocate Memory on Host and Device
-    cl_mem grid_buffer;
-    cl_mem result_buffer;
-    cl_mem grid_points_1d_buffer;
-    grid_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), grid, &err);
-    result_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE|CL_MEM_COPY_HOST_PTR, grid_points_1d * grid_points_1d * sizeof(float), result, &err);
-
-    // 3. Invoke Kernel
-    err = clSetKernelArg(g_product_kernel, 0, sizeof(cl_mem), (void *) &grid_buffer);
-    // err = clSetKernelArg(g_product_kernel, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
-    err = clSetKernelArg(g_product_kernel, 1, sizeof(cl_mem), (void *) &result_buffer);
-    // err = clSetKernelArg(g_product_kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0);
-    err = clSetKernelArg(g_product_kernel, 2, sizeof(cl_ulong), (void *) &grid_points_1d);
-    clFinish(command_queue);
-    globalWorkSize[0] = grid_points_1d-2;
-    globalWorkSize[1] = grid_points_1d-2;
-    localWorkSize[0] = BLOCK_SIZE;
-    localWorkSize[1] = BLOCK_SIZE;
-    err = clEnqueueNDRangeKernel(command_queue, g_product_kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
-    printf("err = %d\n", err);
-   	clFinish(command_queue);
-
-   	// 4. Copy result from device
-    err = clEnqueueReadBuffer(command_queue, result_buffer, CL_TRUE, 0, grid_points_1d * grid_points_1d * sizeof(float), result, 0, NULL, &event);
-    printf("err = %d\n", err);
-    clReleaseEvent(event);
-
-    clFinish(command_queue);
-
-    printf("result[grid_points_1d+2] = %f\n", result[5*grid_points_1d+5]);
-}
-
-/**
- * implements the the 5-point finite differences stencil (only inner grid points are modified due 
- * to Dirichlet boundary conditions)
- * 
- * @param grid grid for which the stencil should be evaluated
- * @param result grid where the stencil's evaluation should be stored
- */
-void g_product_operator_serial(float* grid, float* result)
-{
-	float mesh_width = 1.0/((float)(grid_points_1d-1));
-
-	for (int i = 1; i < grid_points_1d-1; i++)
-	{
-		for (int j = 1; j < grid_points_1d-1; j++)
-		{
-			result[(i*grid_points_1d)+j] =  (
-							(4.0*grid[(i*grid_points_1d)+j]) 
-							- grid[((i+1)*grid_points_1d)+j]
-							- grid[((i-1)*grid_points_1d)+j]
-							- grid[(i*grid_points_1d)+j+1]
-							- grid[(i*grid_points_1d)+j-1]
-							) * (mesh_width*mesh_width);
-		}
-	}
-}
-
-
-/**
- * stores a given grid into a file
- * 
- * @param grid the grid that should be stored
- * @param filename the filename
- */
-void store_grid(float* grid, std::string filename)
-{
-	std::fstream filestr;
-	filestr.open (filename.c_str(), std::fstream::out);
-	
-	// calculate mesh width 
-	float mesh_width = 1.0/((float)(grid_points_1d-1));
-
-	// store grid incl. boundary points
-	for (int i = 0; i < grid_points_1d; i++)
-	{
-		for (int j = 0; j < grid_points_1d; j++)
-		{
-			filestr << mesh_width*i << " " << mesh_width*j << " " << grid[(i*grid_points_1d)+j] << std::endl;
-		}
-		
-		filestr << std::endl;
-	}
-
-	filestr.close();
-}
-
-/**
- * calculate the grid's initial values for given grid points
- *
- * @param x the x-coordinate of a given grid point
- * @param y the y-coordinate of a given grid point
- *
- * @return the initial value at position (x,y)
- */
-float eval_init_func(float x, float y)
-{
-	return (x*x)*(y*y);
-}
-
-/**
- * initializes a given grid: inner points are set to zero
- * boundary points are initialized by calling eval_init_func
- *
- * @param grid the grid to be initialized
- */
-void init_grid(float* grid)
-{
-	// set all points to zero
-	for (int i = 0; i < grid_points_1d*grid_points_1d; i++)
-	{
-		grid[i] = 0.0;
-	}
-
-	float mesh_width = 1.0/((float)(grid_points_1d-1));
-	
-	for (int i = 0; i < grid_points_1d; i++)
-	{
-		// x-boundaries
-		grid[i] = eval_init_func(0.0, ((float)i)*mesh_width);
-		grid[i + ((grid_points_1d)*(grid_points_1d-1))] = eval_init_func(1.0, ((float)i)*mesh_width);
-		// y-boundaries
-		grid[i*grid_points_1d] = eval_init_func(((float)i)*mesh_width, 0.0);
-		grid[(i*grid_points_1d) + (grid_points_1d-1)] = eval_init_func(((float)i)*mesh_width, 1.0);
-	}
-}
-
-
 int main(int argc, char* argv[])
 {
-	if(argc == 1)
-		grid_points_1d = 1024;
-	if(argc > 1)
-		grid_points_1d = atoi(argv[1]);
+	float *input_buffer;
+	float reduced_sum[2];
+	int len = 10;
 
-	float* grid = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
-	float* result = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
-	float* result_serial = (float*)_mm_malloc(grid_points_1d*grid_points_1d*sizeof(float), 64);
-	init_grid(grid);
-	store_grid(grid, "initial_condition.gnuplot");
+	input_buffer = malloc(sizeof(float) * len);
+	for(i = 0; i<len; i++)
+		input_buffer[i] = 1;
 
 	selectDevice();
 
@@ -306,7 +163,7 @@ int main(int argc, char* argv[])
 	// Compiling Kernels
 	size_t program_length;
 	void *buffer;
-	buffer = readProgramToBuffer("g_product_kernel.cl", &program_length);
+	buffer = readProgramToBuffer("trial_kernel.cl", &program_length);
 	program = clCreateProgramWithSource(context, 1, (const char **) &buffer, &program_length, &err);
 	free(buffer);
 	err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
@@ -315,19 +172,34 @@ int main(int argc, char* argv[])
 		printBuildLog();
 		exit(1);
 	}
-	g_product_kernel = clCreateKernel(program, "g_product_operator_parallel", &err);
+	reduce_kernel = clCreateKernel(program, "reduce_parallel", &err);
 
-	g_product_operator(grid, result);
+	// 2. Allocate Memory on Host and Device
+    cl_mem input_buffer;
+    cl_mem reduce_tmp_buffer;
+    input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, len * sizeof(float), input_buffer, &err);
+    reduce_tmp_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, len * sizeof(float), NULL, &err);
 
-	store_grid(result, "result_ocl.gnuplot");
+    // 3. Invoke Kernel
+    err = clSetKernelArg(reduce_kernel, 0, sizeof(cl_mem), (void *) &input_buffer);
+    err = clSetKernelArg(reduce_kernel, 1, sizeof(cl_mem), (void *) &reduce_tmp_buffer);
+    clFinish(command_queue);
+    globalWorkSize[0] = 1;
+    localWorkSize[0] = BLOCK_SIZE;
+    err = clEnqueueNDRangeKernel(command_queue, reduce_kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+    printf("err = %d\n", err);
+   	clFinish(command_queue);
 
-	g_product_operator_serial(grid, result_serial);
+   	// 4. Copy result from device
+    err = clEnqueueReadBuffer(command_queue, reduce_tmp_buffer, CL_TRUE, 0, 2 * sizeof(float), result, 0, NULL, &event);
+    printf("err = %d\n", err);
+    clReleaseEvent(event);
 
-	store_grid(result_serial, "result_serial.gnuplot");
+    clFinish(command_queue);
 
-	_mm_free(grid);
-	_mm_free(result);
-	_mm_free(result_serial);
+    printf("Reduced Sum = %f\n", reduced_sum[1]);
+
+	_mm_free(input_buffer);
 
 	return 0;
 }
