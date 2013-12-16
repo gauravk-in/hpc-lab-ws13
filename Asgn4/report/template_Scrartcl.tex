@@ -291,7 +291,7 @@ Our results show a very  high performance if we consider only time spent to comp
 parallelism of an application like Matrix Multiplication, and the large number of small cores on the GPU. Following image is the
 graphic of the result considering only the time used to execute the kernel.
 
-\begin{figure}[hb]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.8\textwidth]{mat_mul_ocl_vs_omp_kernel}
 	\caption{\textbf{Comparison of GFLOP/s achieved for Matrix Multiplication.} Blue line depicts performance using OpenCL,
@@ -301,7 +301,7 @@ graphic of the result considering only the time used to execute the kernel.
 The performance steeply degrades when we consider the overhead spent in compiling the kernel, sending the input data to the GPU
 and reading the output back from the GPU memory. Following image shows the result keeping this overhead in consideration.
 
-\begin{figure}[hb]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.8\textwidth]{mat_mul_ocl_vs_omp_overhead}
 	\caption{\textbf{Comparison of GFLOP/s achieved for Matrix Multiplication with overhead.} Blue line depicts performance using
@@ -319,7 +319,38 @@ Compiler Intrinsics features to facilitate vectorization.
 \section{Exercise 12: Laplace Equation with OpenCL}
 
 \subsection{Code Overview}
+The challenging aspect in trying to parallelize Laplace Equation Solver with OpenCL, is to efficiently parallelize the 
+\textit{g\_product\_operator()} and \textit{g\_dot\_product()} functions.
+
+We could correctly parallelize the \textit{g\_product\_operator()} function. We create one thread for calculating each element
+of the result matrix. Further optimizations are possible, but unfortunately we could not invest enough time into it.
+
+We tried to parallelize \textit{g\_dot\_product()} function, but failed. We created one thread for each row of the matrix. Each
+thread calculates the scalar product of the row vectors of the matrix. Later, we try to reduce the value calculated by each
+thread. We somehow could not fix some bug with reduce functionality. We could get the reduce functionality to work in a sample
+application trial.cpp (included in source), but simillar code does not work for the real implementation. We will continue to give
+more time to this.
 
 \subsection{Results and Analysis}
+We think that OpenCL is not an ideal choice for parallelizing this application. The kernels are small, and the overhead spent
+in compiling kernels, and transferring data between GPUs is very expensive. This is also what is being reflected in the results we
+have received. However, it must be noted that our results are with only \textit{g\_product\_operator()} function parallelized. 
+
+Possibly, there are more avenues to exploit parallelism but we could not get time to check them.
+
+The results with only \textit{g\_product\_operator()} function parallelized are as follows.
+\begin{center}
+	\begin{tabular}{|l | c | c|}
+		\hline
+		Problem Size & Serial (time) & OpenCL (time) \\ \hline
+		512 & 0.26554 s  & 0.369021 s  \\ \hline
+		1024 & 0.038892 s  & 0.351882 s  \\ \hline
+		2048 & 0.390686 s  & 0.055191 s  \\
+		\hline
+	\end{tabular}
+\end{center}
+
+As can be seen from these results, we got a lot of random times. These times reported here are average times over a set
+of runs. We could not clearly understand the reason for the trends.
 
 \end{document}
