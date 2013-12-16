@@ -8,7 +8,7 @@ timer.o: timer.c timer.h
 ocl_features: ocl_features.c
 	$(CC) $^ -o $@ $(OPENCL_SHLIB)
 
-matrix_mul_benchmark: main_benchmark.c timer.o
+matrix_mul_benchmark: main_benchmark.c timer.c
 	$(CC) $^ -o $@ $(OPENCL_SHLIB)	
 
 matrix_mul_seq_benchmark: main_seq_benchmark.c timer.o

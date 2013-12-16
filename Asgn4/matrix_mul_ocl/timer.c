@@ -33,6 +33,6 @@ double get_ticks_diff_time(time_marker_t time) {
 }
 
 void print_flops(int flop, time_marker_t time) {
-	printf("FLOPS with clock(): %e \n", (double) flop / get_ticks_diff_time(time));
-	printf("FLOPS with timeofday(): %e \n", (double) flop / get_ToD_diff_time(time));
+	printf("FLOPS with clock(): %f \n", (double) flop / get_ticks_diff_time(time));
+	printf("FLOPS with timeofday(): %f \n", (double) flop / get_ToD_diff_time(time));
 }

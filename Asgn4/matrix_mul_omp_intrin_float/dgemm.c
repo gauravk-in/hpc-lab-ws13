@@ -130,7 +130,7 @@ int main(int argc, char **argv)
                 }
         }
 
-        flops = 2.0 * n * n * n / 1000000000;
+        flops = 2.0 * n * n * n / 1000000;
 
         print_flops(flops, time);
 
