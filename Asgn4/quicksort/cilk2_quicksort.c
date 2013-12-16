@@ -69,6 +69,7 @@ int old_main(int length, int argc)
 {
 	//int length;
 	double *data;
+	double timer;
 
 	int mem_size;
 
@@ -98,14 +99,18 @@ int old_main(int length, int argc)
 
 	quicksort(data, length);	
 
+	timer = get_ToD_diff_time(time);
+
 	/*print_list(data, length);*/
+	/*
 	if(check(data, length) != 0)
 		printf("ERROR\n");
+	*/
 
-	printf("Size of dataset: %d, elapsed time[s] %e \n", length, get_ToD_diff_time(time));
+	printf("Size of dataset: %d, elapsed time[s] %e \n", length, timer);
 
 	if(argc > 2){
-		fprintf(fp,"%e;", get_ToD_diff_time(time));
+		fprintf(fp,"%e;", timer);
 	}
 
 	return(0);
@@ -139,7 +144,8 @@ int main(int argc, char **argv)
 		fprintf(fp, "\n");
 	}
 
-	for(j = 1; j < 101; j++)
+	
+	for(j = 1; j < 2; j++)
 	{
 
 		length = j * l;
@@ -173,6 +179,12 @@ int main(int argc, char **argv)
 		
 	}
 	
+	/*	
+	nworkers = __cilkrts_get_nworkers();
+	printf("Intel Cilk Plus # workers: %d\n", nworkers);
+	length = l;
+	old_main(length, argc);
+	*/
 	if(argc > 2) fclose(fp);
 
         return 0;
