@@ -480,8 +480,8 @@ void solve(double** grid_2d, double** b_2d, std::size_t cg_max_iterations, doubl
 	delta_0 = delta_new*eps_squared;
 	residuum = (delta_0/eps_squared);
 	
-	std::cout << "Starting norm of residuum: " << (delta_0/eps_squared) << std::endl;
-	std::cout << "Target norm:               " << (delta_0) << std::endl;
+	//std::cout << "Starting norm of residuum: " << (delta_0/eps_squared) << std::endl;
+	//std::cout << "Target norm:               " << (delta_0) << std::endl;
 
 	while ((needed_iters < cg_max_iterations) && (delta_new > delta_0))
 	{
@@ -518,7 +518,7 @@ void solve(double** grid_2d, double** b_2d, std::size_t cg_max_iterations, doubl
 		
 		residuum = delta_new;
 		needed_iters++;
-		std::cout << "(iter: " << needed_iters << ")delta: " << delta_new << std::endl;
+		//std::cout << "(iter: " << needed_iters << ")delta: " << delta_new << std::endl;
 	}
 
 	std::cout << "Number of iterations: " << needed_iters << " (max. " << cg_max_iterations << ")" << std::endl;
@@ -574,12 +574,13 @@ int main(int argc, char* argv[])
 	double** b_2d = (double**)malloc(grid_points_1d*sizeof(double*));
 
 	grid_2d[0:grid_points_1d] = &(grid[0:grid_points_1d:grid_points_1d]);
-
+	/*
 	for(int i = 0; i<grid_points_1d; i++){
 		for(int j = 0; j<grid_points_1d; j++){
 			printf("grid_2d[%d][%d] = %e\n", i, j, grid_2d[i][j]);
 		}
 	}
+	*/
 	
 	store_grid(grid_2d, "initial_condition.gnuplot");
 

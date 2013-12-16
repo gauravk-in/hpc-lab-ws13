@@ -398,8 +398,8 @@ void solve(double* grid, double* b, std::size_t cg_max_iterations, double cg_eps
 	delta_0 = delta_new*eps_squared;
 	residuum = (delta_0/eps_squared);
 	
-	std::cout << "Starting norm of residuum: " << (delta_0/eps_squared) << std::endl;
-	std::cout << "Target norm:               " << (delta_0) << std::endl;
+	//std::cout << "Starting norm of residuum: " << (delta_0/eps_squared) << std::endl;
+	//std::cout << "Target norm:               " << (delta_0) << std::endl;
 
 	while ((needed_iters < cg_max_iterations) && (delta_new > delta_0))
 	{
@@ -436,7 +436,7 @@ void solve(double* grid, double* b, std::size_t cg_max_iterations, double cg_eps
 		
 		residuum = delta_new;
 		needed_iters++;
-		std::cout << "(iter: " << needed_iters << ")delta: " << delta_new << std::endl;
+		//std::cout << "(iter: " << needed_iters << ")delta: " << delta_new << std::endl;
 	}
 
 	std::cout << "Number of iterations: " << needed_iters << " (max. " << cg_max_iterations << ")" << std::endl;
