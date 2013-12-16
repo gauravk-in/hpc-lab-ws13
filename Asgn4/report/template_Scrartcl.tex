@@ -292,11 +292,41 @@ As demonstrated by figure 4, performance is almost identical. At first, elapsed 
 \section{Exercise 13: Laplace Equation with Intel Array Extensions}
 
 \subsection{Code Overview}
+For the Laplace Equation Solver we implemented two versions using the Intel Array Extensions (IAE) and another one using pragma notation for the stencil operation and IAE in all other routines.
+Our first implementation using IAE utilizes one dimensional arrays to annotate two dimensional matrices. In the original (serial) implementation of the algorithm nested for loops were used to access a section of a matrix row. We treated those parts of the code in a similar way, by replacing only the inner loop through the array notation extensions and keeping the outer loop in place.
+This approach can be demonstrated in following example showing the \textit{g\_scale} function:
+
+\begin{lstlisting}
+void g_scale(double* grid, double scalar)
+{
+	
+	int start;
+		
+	for (int i = 1; i < grid_points_1d-1; i++)
+	{
+		start = ((i*grid_points_1d) + 1);
+		grid[start:(grid_points_1d-2)] = grid[start:(grid_points_1d-2)] * scalar;
+	}
+	
+}
+\end{lstlisting}
+
+We followed a rather different approach in the \textit{iae2\_poisson.cpp} version of the algorithm. In this case we trasnformed one-dimensional arrays to two dimensional ones (wherever applicable) and used intel array extensions to replace inner and outer loops.
+
+Finally, as already mentioned, we implemented a third version of this algorithm where we denoted the stencil operation using the simd vectorization pragma.  
 
 \subsection{Results and Analysis}
+We performed a number of tests to determine the performance of the respective algorithms for different problem sizes. As one can see in the following figure, the best performing implementation is by far the one using Intel Array Extensions on two-dimensional arrays. This was to be expected, since the transformation of 1d into 2d arrays allowed the compiler to fully exploit vectorization options. The pragma simd and the one-dimensional array IAE implementanion show similarly weak performance, especially for larger problem sizes.
+
+\begin{figure}[hb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{poissonIAE_time}
+	\caption{Performance comparison of the three laplace solver implemenations. Time elapsed is given in seconds and the x-axis denotes mesh width. The maximum number of iterations was set high enough so that it would not be reached during runtime and the accuracy was set in all cases to 0.0001}
+\end{figure}
+
 
 \pagebreak
-\section{Exercise 12: Matrix Multiplication with OpenCL}
+\section{Exercise 14: Matrix Multiplication with OpenCL}
 
 \subsection{Overview}
 We were able to achieve Matrix Multiplication using OpenCL with Local Memory Blocking Optimization.
@@ -359,7 +389,7 @@ The OpenMP implementation used for this analysis, is running on 8 cores. It is o
 Compiler Intrinsics features to facilitate vectorization.
 
 \pagebreak
-\section{Exercise 12: Laplace Equation with OpenCL}
+\section{Exercise 15: Laplace Equation with OpenCL}
 
 \subsection{Code Overview}
 The challenging aspect in trying to parallelize Laplace Equation Solver with OpenCL, is to efficiently parallelize the 
