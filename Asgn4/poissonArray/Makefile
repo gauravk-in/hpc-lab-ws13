@@ -19,7 +19,7 @@ lapiae2: iae2_poisson.cpp
 	$(CCC) -o $@ $^
 
 lapsimd: simd_poisson.cpp
-	$(CCC) -O3 -restrict -o $@ $^
+	$(CCC) -O3 -restrict -vec_report3 -o $@ $^
 
 clean:
 	rm -rf *.o poisson poisson_mpi lapiae lapiae2 lapsimd *.gnuplot

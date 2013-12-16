@@ -315,14 +315,14 @@ void g_scale_add(double* dest, double* src, double scalar)
  * @param result grid where the stencil's evaluation should be stored
  */
  // Test
-void g_product_operator(double* grid, double* result)
+void g_product_operator(double* restrict grid, double* restrict result)
 {
 	double mesh_width = 1.0/((double)(grid_points_1d-1));
 
 	
 	for (int i = 1; i < grid_points_1d-1; i++)
 	{
-		#pragma vector always
+		#pragma simd
 		for (int j = 1; j < grid_points_1d-1; j++)
 		{
 			result[(i*grid_points_1d)+j] =  (
