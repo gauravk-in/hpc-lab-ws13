@@ -242,8 +242,51 @@ and compiles the Device Code to create the kernel.
 \section{Exercise 12: Quicksort with Intel Cilk}
 
 \subsection{Code Overview}
+For this exercise, we implemented the quicksort algorithm using Intel Cilk Plus. 
+Since quicksort works in a recursive manner, we used the \textit{\_cilk\_spawn} keyword to spawn 
+new threads and parallelize the computation for the left and right subarrays. 
+The \textit{\_cilk\_sync} keyword helped us synchronize the children of the function at a given level 
+of recursion. 
+Following code fragment shows how our implementation works:
+	\begin{lstlisting}
+/* recursion */
+cilk_spawn quicksort(data, right);
+quicksort(&(data[left]), length - left);
+cilk_sync;
+	 \end{lstlisting}
 
 \subsection{Results and Analysis}
+We designed a number of tests to measure the performance of our implementation. We performed both weak and strong scaling for different problem sizes. Furthermore, we compared the performance of the Intel Cilk Plus Implementation with our OpenMP implementation from the second assignment.
+
+Following figure shows the speedup achieved for different numbers of threads for the Intel Cilk implementation. Results are shown for three problem sizes: an array length of 4, 8 and 16 million elements. 
+
+\begin{figure}[hb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{Cilk_speedup}
+	\caption{Speedup of Intel Cilk Plus implementation for three different problem sizes}
+\end{figure}
+
+As can be seen in figure 2, the highest speedup is achieved for 16 threads. After this point, performance levels off and a steep decline is visible for 64 threads. This is due to the additional overhead, since the maximum number of threads for this partition has been exceeded. 
+Speedup seems to be slightly better for larger problem sizes. It should also be noted that doubling the number of threads leads to less than twice as good performance, but performance improvements are still large.
+
+The next figure compares the Intel Cilk variant of quicksort to the OpenMP implementation of the algorithm. It is immediately clear that both implementations achieve almost the same performance. The highest performance gain is achieved for 16 threads.
+
+\begin{figure}[hb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{quick_strong_scaling2}
+	\caption{Strong scaling comparison for Intel Cilk and OpenMP implementations of quicksort. The vertical axis shows time elapsed in seconds and the horizontal axis the number of threads used}
+\end{figure}
+
+
+Lastly, we also attempted a number of weak scaling tests to compare both implementations. We started with a problem size of 1 million elements and 1 thread and iteratively doubled both problem size and the number of threads up to a cumulative factor of 32.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.8\textwidth]{quick_weak_scaling}
+	\caption{Weak scaling comparison for Intel Cilk and OpenMP implementations of quicksort. The vertical axis shows time elapsed in seconds and the horizontal axis the number of threads spawned as well as the array length in million elements}
+\end{figure}
+
+As demonstrated by figure 4, performance is almost identical. At first, elapsed time does not change much at each step. However, at 16 threads the needed time is already almost 3 times the time needed for initial problem of 1 million elements running on one thread. From that point onwards the problem does not scale very well.
 
 \pagebreak
 \section{Exercise 13: Laplace Equation with Intel Array Extensions}
