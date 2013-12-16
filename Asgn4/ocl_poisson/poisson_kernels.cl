@@ -24,6 +24,7 @@ __kernel void g_dot_product_parallel (	__global const float* grid1,
 						unsigned long grid_points_1d)
 {
 	int x = 0;
+	int ty =  get_group_id(0) * BLOCKSIZE + get_local_id(0);
 	int y = get_group_id(0) * BLOCKSIZE + get_local_id(0) + 1;
 	float tmp = 0.0;
 	float i;
@@ -33,11 +34,15 @@ __kernel void g_dot_product_parallel (	__global const float* grid1,
 	for(x = 1; x < grid_points_1d-1; x++)
 		reduce_tmp[y] += grid1[y * grid_points_1d + x] * grid2[y * grid_points_1d + x];
 
+	barrier(CLK_LOCAL_MEM_FENCE);
+	
 	for(i=log_width; i>0; i-=1)
-	{
-		if(y <= pown(two, i))
-		{
-			reduce_tmp[y % (unsigned long)pown(two, i-1)] += reduce_tmp[y];
-		}
-	}
+    {
+        if(ty <= pown(two, i) && ty > pown(two, i-1))
+        {
+            reduce_tmp[(ty-1) % (unsigned long)pown(two, i-1) + 1] += reduce_tmp[ty];
+        }
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
 }
+

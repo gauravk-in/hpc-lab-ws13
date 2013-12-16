@@ -147,13 +147,15 @@ void printBuildLog()
 
 int main(int argc, char* argv[])
 {
-	float *input_buffer;
-	float reduced_sum[2];
-	int len = 10;
+	float *input_host;
+	float *reduced_sum;
+	int len = 18;
+	int i;
 
-	input_buffer = malloc(sizeof(float) * len);
+	input_host = (float*)malloc(sizeof(float) * len);
+	reduced_sum = (float*)malloc(sizeof(float) * len);
 	for(i = 0; i<len; i++)
-		input_buffer[i] = 1;
+		input_host[i] = 1;
 
 	selectDevice();
 
@@ -177,29 +179,30 @@ int main(int argc, char* argv[])
 	// 2. Allocate Memory on Host and Device
     cl_mem input_buffer;
     cl_mem reduce_tmp_buffer;
-    input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, len * sizeof(float), input_buffer, &err);
+    input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, len * sizeof(float), input_host, &err);
     reduce_tmp_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE, len * sizeof(float), NULL, &err);
 
     // 3. Invoke Kernel
     err = clSetKernelArg(reduce_kernel, 0, sizeof(cl_mem), (void *) &input_buffer);
     err = clSetKernelArg(reduce_kernel, 1, sizeof(cl_mem), (void *) &reduce_tmp_buffer);
     clFinish(command_queue);
-    globalWorkSize[0] = 1;
-    localWorkSize[0] = BLOCK_SIZE;
-    err = clEnqueueNDRangeKernel(command_queue, reduce_kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+    globalWorkSize[0] = len;
+    localWorkSize[0] = len;
+    err = clEnqueueNDRangeKernel(command_queue, reduce_kernel, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
     printf("err = %d\n", err);
    	clFinish(command_queue);
 
    	// 4. Copy result from device
-    err = clEnqueueReadBuffer(command_queue, reduce_tmp_buffer, CL_TRUE, 0, 2 * sizeof(float), result, 0, NULL, &event);
+    err = clEnqueueReadBuffer(command_queue, reduce_tmp_buffer, CL_TRUE, 0, len * sizeof(float), reduced_sum, 0, NULL, &event);
     printf("err = %d\n", err);
     clReleaseEvent(event);
 
     clFinish(command_queue);
 
-    printf("Reduced Sum = %f\n", reduced_sum[1]);
+    for(i=0; i<len; i++)
+	printf("Sum = %f\n", reduced_sum[i]);
 
-	_mm_free(input_buffer);
+	free(input_host);
 
 	return 0;
 }
