@@ -15,4 +15,4 @@ trial: trial.cpp
 	$(CC) $(CCFLAGS) -o $@ $^ $(OPENCL_SHLIB)
 
 clean:
-	rm -rf *.o poisson poisson_ocl *.gnuplot
+	rm -rf *.o poisson poisson_ocl *.gnuplot trial
