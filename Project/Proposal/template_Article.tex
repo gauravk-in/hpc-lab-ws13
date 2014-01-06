@@ -42,7 +42,18 @@ the bottlenecks.
 
 \section{Parallelization using OpenMP and MPI}
 We will try to find the best strategy to parallelize our implementation using hybrid
-implementation with OpenMP and MPI. 
+approach with OpenMP and MPI. 
+
+We will partition the problem space into 2 dimensional blocks using SWE\_block. Computation
+for each block will be performed in parallel using MPI. Each block will be executed on a node.
+For this, we will need to exchange results of the border edges for each iteration, which will
+be done using MPI\_Vector and MPI constructs for sending and receiving messages. We will try
+to optimize this by overlapping communication with computation.
+By creating a pipeline we will try to maximize the performance that can be achieved.
+
+The computation inside SWE\_block can be parallelized
+using OpenMP, and will be executed on a single node. This is so that message passing
+over the network can be reduced.  
 
 \section{Performance Analysis using Scalasca}
 If time permits, we will try to manually instrument the SWE code. We will present our
