@@ -34,7 +34,7 @@ If time permits, we will try to optimize the Augmented Riemann Solvers as well.
 
 \section{Cache Blocking}
 We will implement various Cache Blocking Optimizations using existing SWE\_Blocks and
-implementing blocking within each SWE\_Block. We will strive to compare our implementations and
+implementing blocking within each SWE\_Block. We will to compare our implementations and
 produce a report based on our understanding of the bottleneck issues.
 
 If time permits, we will try to extend the analysis using Scalasca to better identify
@@ -42,7 +42,18 @@ the bottlenecks.
 
 \section{Parallelization using OpenMP and MPI}
 We will try to find the best strategy to parallelize our implementation using hybrid
-implementation with OpenMP and MPI. 
+approach with OpenMP and MPI. 
+
+We will partition the problem space into 2 dimensional blocks using SWE\_block. Computation
+for each block will be performed in parallel using MPI. Each block will be executed on a node.
+For this, we will need to exchange results of the border edges for each iteration, which will
+be done using MPI\_Vector and MPI constructs for sending and receiving messages. We will try
+to optimize this by overlapping communication with computation.
+By creating a pipeline we will try to maximize the performance that can be achieved.
+
+The computation inside SWE\_block can be parallelized
+using OpenMP, and will be executed on a single node. This is so that message passing
+over the network can be reduced.
 
 \section{Performance Analysis using Scalasca}
 If time permits, we will try to manually instrument the SWE code. We will present our
@@ -54,7 +65,7 @@ We will start our implementation with tasks of vectorization and hybrid parallel
 with OpenMP and MPI. Gaurav will focus on parallelization while Evangelos will work in parallel
 on improving vectorization using Compiler Intrinsics. 
 
-We will then collaborate on identifying Cache bottlenecks, and solve them by implementing
+We will then collaborate on identifying Cache bottlenecks and solve them by implementing
 Cache Blocking strategies. We hope to be able to complete these tasks by 18 January 2014.
 
 We will work on fixing bugs if any, and producing results to demonstrate the merits of our

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.12.18)  6 JAN 2014 13:37
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2013.12.18)  6 JAN 2014 13:49
 entering extended mode
  %&-line parsing enabled.
 **template_Article.tex
@@ -57,8 +57,13 @@ us-ing ex-ist-ing SWE[]Blocks
 
 [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2]
-(./template_Article.aux) ) 
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
+Overfull \hbox (10.68398pt too wide) in paragraph at lines 47--53
+[]\OT1/cmr/m/n/10 We will par-ti-tion the prob-lem space into 2 di-men-sional b
+locks us-ing SWE[]block.
+ []
+
+[2] (./template_Article.aux) ) 
 Here is how much of TeX's memory you used:
  234 strings out of 493848
  2565 string characters out of 1152822
@@ -67,14 +72,14 @@ Here is how much of TeX's memory you used:
  8233 words of font info for 29 fonts, out of 3000000 for 9000
  714 hyphenation exceptions out of 8191
  23i,6n,17p,147b,187s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texmf-texlive/fonts/type1/public/amsfonts
-/cm/cmbx12.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx9.p
-fb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/sha
-re/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-tex
-live/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive/fonts/t
-ype1/public/amsfonts/cm/cmr9.pfb></usr/share/texmf-texlive/fonts/type1/public/a
-msfonts/cm/cmti10.pfb>
-Output written on template_Article.pdf (2 pages, 100052 bytes).
+</usr/share/texmf-texlive/fonts/type1/public/amsf
+onts/cm/cmbx12.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmb
+x9.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr
+/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf
+-texlive/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive/fon
+ts/type1/public/amsfonts/cm/cmr9.pfb></usr/share/texmf-texlive/fonts/type1/publ
+ic/amsfonts/cm/cmti10.pfb>
+Output written on template_Article.pdf (2 pages, 100996 bytes).
 PDF statistics:
  37 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
