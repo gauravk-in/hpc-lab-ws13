@@ -1,0 +1,41 @@
+S=C=A=N: Mon Jan 20 11:09:08 2014: Collect start
+./SWE_intel_release_none_fwavevec -x 800 -y 800 -o /dev/null/
+
+*************************************************************
+Welcome to SWE
+
+SWE Copyright (C) 2012-2013
+  Technische Universitaet Muenchen
+  Department of Informatics
+  Chair of Scientific Computing
+  http://www5.in.tum.de/SWE
+
+SWE comes with ABSOLUTELY NO WARRANTY.
+SWE is free software, and you are welcome to redistribute it
+under certain conditions.
+Details can be found in the file 'gpl.txt'.
+*************************************************************
+Mon Jan 20 11:09:08 2014	Writing output file at time: 0 seconds
+Time left: 99999999 sec (  0% done) [>                                                                                                                    ] |                                                                                                                                                             
+------------------------------------------------------------------
+Mon Jan 20 11:09:08 2014	Everything is set up, starting the simulation.
+------------------------------------------------------------------
+Time left: 99999999 sec (  0% done) [>                                                                                                                    ] /[.0]EPIK: POMP2_Init: No POMP2 instrumented regions defined! (POMP_MAX_ID=0)
+[.0]EPIK: Activated ./epik_SWE_intel_release_none_fwavevec_Ox1_trace [10000000 bytes]
+[.0]EPIK: No current path to pop! (rid=23)
+[.0]EPIK: Closing experiment ./epik_SWE_intel_release_none_fwavevec_Ox1_trace [0.000GB] (max 34)
+[.0]EPIK: Flushed 34 bytes to file ./SWE_intel_release_none_fwavevec_Ox1_trace.FFFFFFFFA8C0FC00.26141.0.elg
+[.0]EPIK: Largest definitions buffer 1921 bytes
+[.0]EPIK: 2 unique paths (2 max paths, 0 max frames, 0 unknowns)
+[.0]EPIK: Unifying... done (0.007s)
+[.0]EPIK: Collating... done (0.002s)
+[.0]EPIK: Merging thread traces...
+[.0]EPIK: 0 blocks allocated for 52 bytes of ./SWE_intel_release_none_fwavevec_Ox1_trace.FFFFFFFFA8C0FC00.26141.0.elg
+[.0]EPIK: Merging thread traces... (0.008s)
+[.0]EPIK: 1flush=0.000GB@0.062MB/s, Pflush=0.000GB@0.000MB/s
+[.0]EPIK: Closed experiment ./epik_SWE_intel_release_none_fwavevec_Ox1_trace (0.025s) maxHeap(0)=33.152/33.152MB
+
+*************************************************************
+SWE finished successfully.
+*************************************************************
+S=C=A=N: Mon Jan 20 11:09:08 2014: Collect done (status=0) 0s
