@@ -1,0 +1,16 @@
+S=C=A=N: Mon Jan 20 13:51:03 2014: Analyze start
+/lrz/sys/intel/mpi_41_1_036/bin64/mpiexec /home/hpc/t1221/t1221aa/bin/scout.mpi ./epik_SWE_intel_release_mpi_fwavevec_O_trace
+SCOUT   Copyright (c) 1998-2013 Forschungszentrum Juelich GmbH
+
+Analyzing experiment archive ./epik_SWE_intel_release_mpi_fwavevec_O_trace
+
+Reading definitions file  ... done (0.003s).
+Reading event trace files ... done (0.182s).
+Preprocessing             ... done (0.022s).
+Analyzing trace data      ... done (4.341s).
+Writing report files      ... done (0.714s).
+
+Max. memory usage         : 43.184MB
+
+Total processing time     : 5.275s
+S=C=A=N: Mon Jan 20 13:51:09 2014: Analyze done (status=0) 6s
